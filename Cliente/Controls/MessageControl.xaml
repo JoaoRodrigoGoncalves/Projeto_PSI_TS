@@ -1,0 +1,40 @@
+﻿<UserControl x:Class="Cliente.MessageControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Cliente"
+             mc:Ignorable="d"
+             d:DesignWidth="600">
+    <StackPanel HorizontalAlignment="Left">
+        <StackPanel Orientation="Horizontal">
+            <TextBlock 
+                    x:Name="textBlock_nomeUtilizador"
+                    Padding="10 5 10 0"
+                    FontWeight="Bold"
+                    FontSize="15"
+                    VerticalAlignment="Center"
+                    Text="..."/>
+            <TextBlock
+                    x:Name="textBlock_timestamp"
+                    VerticalAlignment="Bottom"
+                    FontSize="10"
+                    Text="00 00 0000"
+                    />
+        </StackPanel>
+
+        <Border
+            CornerRadius="10"
+            Background="#00FF55"
+            Width="400"
+            Margin="10 0 10 0"
+            >
+            <TextBlock
+                x:Name="textBlock_mensagem"
+                TextWrapping="Wrap"
+                Padding="10 5 10 5 "
+                Margin="10 0 10 0"
+                Text="..."/>
+        </Border>
+    </StackPanel>
+</UserControl>
