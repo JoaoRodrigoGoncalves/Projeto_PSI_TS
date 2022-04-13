@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Windows;
 
 namespace Cliente
@@ -22,7 +21,7 @@ namespace Cliente
             // Preencher elementos do UI
 
             textBlock_nomeUtilizador.Text = username;
-            textBlock_listaUtilizadores.Text = "Eu"; // TODO: Ao longo do carregamento das informações do servidor, este campo deve ser alterado
+            textBlock_listaUtilizadores.Text = "Eu, Outro"; // TODO: Ao longo do carregamento das informações do servidor, este campo deve ser alterado
 
             // Adição de notificação de entrada
 
@@ -30,7 +29,7 @@ namespace Cliente
             messagePanel.Children.Add(joinNotification);
         }
 
-        private void AdicionarMensagemCliente(string mensagem)
+        private void adicionarMensagemCliente(string mensagem)
         {
             if (String.IsNullOrEmpty(mensagem) || String.IsNullOrWhiteSpace(mensagem))
                 return;
@@ -39,7 +38,7 @@ namespace Cliente
             messagePanel.Children.Add(message);
         }
 
-        private void AdicionarMensagemParticipante(string nomeParticipante, DateTime data, string mensagem)
+        private void adicionarMensagemParticipante(string nomeParticipante, DateTime data, string mensagem)
         {
             MessageControl message = new MessageControl("Outro", data, mensagem);
             messagePanel.Children.Add(message);
@@ -47,7 +46,7 @@ namespace Cliente
 
         private void button_enviarMensagem_Click(object sender, RoutedEventArgs e)
         {
-            AdicionarMensagemCliente(textBox_mensagem.Text);
+            adicionarMensagemCliente(textBox_mensagem.Text);
             textBox_mensagem.Clear();
             messagePanelScroll.ScrollToEnd(); // Exclusivo para quando a mensagem é do cliente atual
         }
@@ -56,7 +55,7 @@ namespace Cliente
         {
             if(e.Key == System.Windows.Input.Key.Enter)
             {
-                AdicionarMensagemCliente(textBox_mensagem.Text);
+                adicionarMensagemCliente(textBox_mensagem.Text);
                 textBox_mensagem.Clear();
                 messagePanelScroll.ScrollToEnd(); // Exclusivo para quando a mensagem é do cliente atual
             }
@@ -66,7 +65,7 @@ namespace Cliente
         {
             // Botão temporário para gerar uma mensagem de outro cliente
 
-            AdicionarMensagemParticipante("Outro", DateTime.Now, "Aliquam rutrum, magna at eleifend feugiat, nibh tortor tempor elit, non vehicula libero mauris sit amet felis. Aliquam egestas, tellus quis eleifend venenatis, ligula est scelerisque mauris, nec posuere turpis risus sit amet quam. Suspendisse sit amet lorem ut purus tristique dictum ut et diam. Pellentesque egestas cursus elit a finibus. Duis vulputate vulputate pharetra. Proin eu suscipit purus. Vivamus pharetra hendrerit nisi, in consectetur augue. Morbi finibus, mauris a viverra tempus, ante nulla pretium purus, a sagittis ipsum massa eu mauris.");
+            adicionarMensagemParticipante("Outro", DateTime.Now, "Aliquam rutrum, magna at eleifend feugiat, nibh tortor tempor elit, non vehicula libero mauris sit amet felis. Aliquam egestas, tellus quis eleifend venenatis, ligula est scelerisque mauris, nec posuere turpis risus sit amet quam. Suspendisse sit amet lorem ut purus tristique dictum ut et diam. Pellentesque egestas cursus elit a finibus. Duis vulputate vulputate pharetra. Proin eu suscipit purus. Vivamus pharetra hendrerit nisi, in consectetur augue. Morbi finibus, mauris a viverra tempus, ante nulla pretium purus, a sagittis ipsum massa eu mauris.");
         }
 
         private void Window_Closed(object sender, EventArgs e)

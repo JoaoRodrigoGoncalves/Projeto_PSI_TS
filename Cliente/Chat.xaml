@@ -39,7 +39,7 @@
         </Style>
         <Style x:Key="EnviarBtn" TargetType="{x:Type Button}">
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
-            <Setter Property="Background" Value="#00FF20"/>
+            <Setter Property="Background" Value="#06D6A0"/>
             <Setter Property="BorderBrush" Value="Black"/>
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -57,11 +57,11 @@
                                 <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="true">
-                                <Setter Property="Background" TargetName="border" Value="Green"/>
+                                <Setter Property="Background" TargetName="border" Value="#008c71"/>
                                 <Setter Property="BorderBrush" TargetName="border" Value="Black"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="true">
-                                <Setter Property="Background" TargetName="border" Value="Green"/>
+                                <Setter Property="Background" TargetName="border" Value="#008c71"/>
                                 <Setter Property="BorderBrush" TargetName="border" Value="Black"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="false">
@@ -76,7 +76,7 @@
         </Style>
         <Style x:Key="TerminarSessaoBtn" TargetType="{x:Type Button}">
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual1}"/>
-            <Setter Property="Background" Value="#E84855"/>
+            <Setter Property="Background" Value="#EF476F"/>
             <Setter Property="BorderBrush" Value="Black"/>
             <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
             <Setter Property="BorderThickness" Value="1"/>

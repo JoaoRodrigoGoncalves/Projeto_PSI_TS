@@ -6,22 +6,7 @@
              xmlns:local="clr-namespace:Cliente"
              mc:Ignorable="d" 
              d:DesignWidth="600">
-    <StackPanel HorizontalAlignment="Right">
-        <StackPanel Orientation="Horizontal">
-            <TextBlock 
-                    x:Name="textBlock_nomeUtilizador"
-                    Padding="10 5 10 0"
-                    FontWeight="Bold"
-                    FontSize="15"
-                    VerticalAlignment="Center"
-                    Text="..."/>
-            <TextBlock
-                    x:Name="textBlock_timestamp"
-                    VerticalAlignment="Bottom"
-                    FontSize="10"
-                    Text="00 00 0000"
-                    />
-        </StackPanel>
+    <StackPanel Margin="0 10 0 0" HorizontalAlignment="Right">
 
         <Border
             CornerRadius="10"
@@ -36,5 +21,12 @@
                 Margin="10 0 10 0"
                 Text="..."/>
         </Border>
+        <TextBlock
+            x:Name="textBlock_timestamp"
+            FontSize="10"
+            HorizontalAlignment="Right"
+            Margin="0 0 10 0"
+            Text="00/00/0000 00:00:00"
+        />
     </StackPanel>
 </UserControl>
