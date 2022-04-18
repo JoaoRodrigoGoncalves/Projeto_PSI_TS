@@ -154,7 +154,7 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    
+
     <Border Margin="10 10 10 10">
         <StackPanel>
             <Grid>
@@ -181,8 +181,8 @@
                 <Button
                     Style="{DynamicResource TerminarSessaoBtn}"
                     x:Name="button_terminarSessao"
-                    Margin="10 0 0 0"
-                    Grid.Column="2">
+                    Margin="10.2,0,-0.4,0"
+                    Grid.Column="2">           
                     Terminar Sessão
                 </Button>
             </Grid>
@@ -200,14 +200,14 @@
                         <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
-                    
+
                     <TextBox Style="{DynamicResource MessageInput}"
                         x:Name="textBox_mensagem"
                         KeyDown="textBox_mensagem_KeyDown"
                         Padding="0 2 0 2"
                         Grid.Column="0"
                     />
-                    
+
                     <Button
                         Style="{DynamicResource EnviarBtn}"
                         x:Name="button_enviarMensagem"
