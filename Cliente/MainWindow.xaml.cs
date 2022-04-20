@@ -40,20 +40,5 @@ namespace Cliente
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
         }
-
-        private void button_User_Profile(object sender, RoutedEventArgs e)
-        {
-            // Código temporário para efeitos de teste
-
-            if (!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
-            {
-                UserProfile janela_User = new UserProfile(textBox_nomeUtilizador.Text);
-                janela_User.ShowDialog();
-            }
-            else
-            {
-                textBox_nomeUtilizador.BorderBrush = Brushes.Red;
-            }
-        }
     }
 }

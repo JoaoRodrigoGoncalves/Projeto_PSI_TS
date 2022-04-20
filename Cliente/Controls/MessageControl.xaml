@@ -13,12 +13,17 @@
                 FontWeight="Bold"
                 FontSize="15"
                 VerticalAlignment="Center"
-                Text="..."/>
+                Text="..."
+                MouseUp="textBlock_nomeUtilizador_MouseUp"
+                MouseEnter="textBlock_nomeUtilizador_MouseEnter"
+                MouseLeave="textBlock_nomeUtilizador_MouseLeave"/>
 
         <Border
+            x:Name="BallonBorder"
             CornerRadius="10"
             Background="#00FF55"
-            Width="400"
+            MaxWidth="400"
+            MinWidth="100"
             Margin="10 0 10 0"
             >
             <TextBlock

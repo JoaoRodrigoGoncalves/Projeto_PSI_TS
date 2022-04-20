@@ -10,6 +10,8 @@ namespace Servidor
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("Aplicacao Servidor Aberta");
+            Console.ReadKey();
         }
     }
 }

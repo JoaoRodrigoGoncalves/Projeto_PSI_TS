@@ -36,7 +36,6 @@ namespace Cliente
 
             ClientMessageControl message = new ClientMessageControl(this.utilizador, DateTime.Now, mensagem);
             messagePanel.Children.Add(message);
-            //UserProfile.messagePanel.Add(message);
         }
 
         private void adicionarMensagemParticipante(string nomeParticipante, DateTime data, string mensagem)
