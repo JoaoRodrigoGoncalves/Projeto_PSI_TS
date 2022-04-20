@@ -40,5 +40,28 @@ namespace Cliente
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
         }
+
+        private void button_registar_Click(object sender, RoutedEventArgs e)
+        {
+            // Código temporário para efeitos de teste
+
+            if (!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
+            {
+                if (!String.IsNullOrEmpty(textBox_palavraPasse.Password) || !String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
+                {
+                    this.Hide();
+                    Chat janela_chat = new Chat(textBox_nomeUtilizador.Text);
+                    janela_chat.ShowDialog();
+                }
+                else
+                {
+                    textBox_palavraPasse.BorderBrush = Brushes.Red;
+                }
+            }
+            else
+            {
+                textBox_nomeUtilizador.BorderBrush = Brushes.Red;
+            }
+        }
     }
 }
