@@ -27,6 +27,9 @@ namespace Cliente
 
             ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
             messagePanel.Children.Add(joinNotification);
+
+            ///
+            
         }
 
         private void adicionarMensagemCliente(string mensagem)
