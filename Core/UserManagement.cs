@@ -35,7 +35,20 @@ namespace Core
 
         public uint GenerateUserID()
         {
-            return (uint)(users.Count + 1);
+            // TODO: Alterar no futo para o ID do utilizador na base de dados
+            Random random = new Random();
+            bool success = false;
+            uint userID = 0;
+
+            while(!success)
+            {
+                userID = (uint)random.Next(1, 101);
+
+                if(GetUser(userID) == null)
+                    success = true;
+
+            }
+            return userID;
         }
 
         /// <summary>
