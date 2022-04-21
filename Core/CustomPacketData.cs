@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Core
 {
@@ -17,6 +18,11 @@ namespace Core
     {
         public PacketType Type { get; set; }
 
+        /// <summary>
+        /// Conteúdos a enviar.
+        /// Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Packet"/> e <see cref="Register_Packet"/>.
+        /// Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.
+        /// </summary>
         public object Contents { get; set; }
     }
 
@@ -27,29 +33,20 @@ namespace Core
 
     }
 
-    public class UserLeft_Packet
-    {
-        public uint userID { get; set; }
-    }
-
     public class Message_Packet
     {
         public uint userID { get; set; }
         public string message { get; set; }
     }
 
-    public class UserList_Packet
+    public class UserListItem_Packet
     {
-        //Isto deve levar cast (List<UserList_Packet>)contents
-
         public uint userID { get; set; }
         public string username { get; set; }
     }
 
-    public class UserMessageHistory_Packet
+    public class UserMessageHistoryItem_Packet
     {
-        //Isto deve levar um cast (List<UserMessageHistory_Packet>)Contents
-
         public string message { get; set; }
         public DateTime time { get; set; }
     }
@@ -68,7 +65,13 @@ namespace Core
 
     public class CustomPacketData
     {
-        public dynamic getPacketContents(Basic_Packet packet)
+        /// <summary>
+        /// Aplica a estrutura de dados correta
+        /// </summary>
+        /// <param name="packet">Pacote "original" com os dados</param>
+        /// <returns>Estrutura correta</returns>
+        /// <exception cref="Exception">Caso o tipo de pacote indicado não exista</exception>
+        public dynamic GetPacketContents(Basic_Packet packet)
         {
             dynamic contents;
 
@@ -79,7 +82,7 @@ namespace Core
                     break;
 
                 case PacketType.USER_LEFT:
-                    contents = (UserLeft_Packet)packet.Contents;
+                    contents = (uint)packet.Contents;
                     break;
 
                 case PacketType.MESSAGE:
@@ -87,11 +90,11 @@ namespace Core
                     break;
 
                 case PacketType.USER_LIST:
-                    contents = (UserList_Packet)packet.Contents;
+                    contents = (List<UserListItem_Packet>)packet.Contents;
                     break;
 
                 case PacketType.MESSAGE_HISTORY:
-                    contents = (UserMessageHistory_Packet)packet.Contents;
+                    contents = (List<UserMessageHistoryItem_Packet>)packet.Contents;
                     break;
 
                 case PacketType.AUTH:
