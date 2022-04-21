@@ -63,5 +63,24 @@ namespace Cliente
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
         }
+
+        private void textBlock_linkRegistar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            this.Hide();
+            registar janela_registar = new registar();
+            janela_registar.ShowDialog();
+        }
+
+        private void textBlock_linkRegistar_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            textBlock_linkRegistar.TextDecorations = TextDecorations.Underline;
+        }
+
+        private void textBlock_linkRegistar_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            TextDecorationCollection decorations = new TextDecorationCollection();
+            decorations.Clear();
+            textBlock_linkRegistar.TextDecorations = decorations;
+        }
     }
 }
