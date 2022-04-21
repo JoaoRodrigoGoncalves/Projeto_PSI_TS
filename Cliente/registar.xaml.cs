@@ -32,13 +32,9 @@ namespace Cliente
             {
                 if (!String.IsNullOrEmpty(textBox_palavraPasse.Password) || !String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
                 {
-                    if (!String.IsNullOrEmpty(textBox_verificarPalavraPasse.Password) || !String.IsNullOrWhiteSpace(textBox_verificarPalavraPasse.Password))
-                    {
-                        if (textBox_palavraPasse.Password == textBox_verificarPalavraPasse.Password) {
-                            this.Hide();
-                            MainWindow janela_login = new MainWindow();
-                            janela_login.ShowDialog();
-                        }
+                    if (textBox_palavraPasse.Password == textBox_verificarPalavraPasse.Password) {
+                        //Falta processar os dados do servidor
+                        Close();
                     }
                     else
                     {

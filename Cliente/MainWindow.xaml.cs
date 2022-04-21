@@ -66,7 +66,6 @@ namespace Cliente
 
         private void textBlock_linkRegistar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            this.Hide();
             registar janela_registar = new registar();
             janela_registar.ShowDialog();
         }
