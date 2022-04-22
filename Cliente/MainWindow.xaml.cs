@@ -1,6 +1,8 @@
 ﻿using System;
+using EI.SI;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -12,6 +14,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Net;
+using Core;
+using Newtonsoft.Json;
 
 namespace Cliente
 {
@@ -20,9 +25,20 @@ namespace Cliente
     /// </summary>
     public partial class MainWindow : Window
     {
+        private const int PORT = 5000;
+        NetworkStream networkStream;
+        ProtocolSI protocolSI;
+        TcpClient client;
+
         public MainWindow()
         {
             InitializeComponent();
+
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Loopback, PORT);
+            client = new TcpClient();
+            client.Connect(endPoint);
+            networkStream = client.GetStream();
+            protocolSI = new ProtocolSI();
         }
 
         private void button_entrar_Click(object sender, RoutedEventArgs e)
@@ -31,9 +47,25 @@ namespace Cliente
 
             if(!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
             {
-                this.Hide();
+                //Envia os dados do utilizador(username e password) para o servidor 
+                Basic_Packet pacote = new Basic_Packet();
+                pacote.Type = PacketType.AUTH_REQUEST;//Indicar que o pacote é um pedido de autenticação
+
+                Auth_Request_Packet login = new Auth_Request_Packet();
+                login.username = textBox_nomeUtilizador.Text;
+                login.password = textBox_palavraPasse.Password;
+
+                pacote.Contents = login;
+
+                byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pacote));
+                networkStream.Write(dados, 0, dados.Length);
+
+                //Esconde a janela de login e abre a janela de chat 
+                /*this.Hide();
                 Chat janela_chat = new Chat(textBox_nomeUtilizador.Text);
-                janela_chat.ShowDialog();
+                janela_chat.ShowDialog();*/
+
+                
             }
             else
             {
