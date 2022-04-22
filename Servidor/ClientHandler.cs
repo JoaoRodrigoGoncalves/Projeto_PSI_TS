@@ -74,32 +74,35 @@ namespace Servidor
                                 Basic_Packet auth_response = new Basic_Packet();
                                 auth_response.Type = PacketType.AUTH_RESPONSE;
 
-                                Console.WriteLine("Cliente {0} juntou-se!", auth_request.username);
                                 userID = userManagement.GenerateUserID(); // Obter um id para este utilizador
-                                userManagement.AddUser((uint)userID, auth_request.username, null); // Adicionar à lista de utilizadores
+                                Console.WriteLine("Cliente {0} ({1}) juntou-se!", auth_request.username, userID);
+                                userManagement.AddUser((uint)userID, auth_request.username, null, networkStream); // Adicionar à lista de utilizadores
 
                                 // Preencher dados de resposta
                                 Auth_Response_Packet auth = new Auth_Response_Packet();
                                 auth.success = true;
                                 auth.userID = userID;
                                 auth.userImage = null;
+                                auth.message = null;
                                 auth_response.Contents = auth;
 
                                 byte[] data = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(auth_response));
                                 networkStream.Write(data, 0, data.Length);
 
-                                // Avisar todos os utilizadores de que alguém se juntou
-                                Basic_Packet user_join = new Basic_Packet();
-                                user_join.Type = PacketType.USER_JOINED;
+                                if(userManagement.users.Count > 1)
+                                {
+                                    // Avisar todos os utilizadores de que alguém se juntou
+                                    Basic_Packet user_join = new Basic_Packet();
+                                    user_join.Type = PacketType.USER_JOINED;
 
-                                UserJoined_Packet join = new UserJoined_Packet();
-                                join.userID = (uint)userID;
-                                join.username = auth_request.username;
-                                user_join.Contents = join;
+                                    UserJoined_Packet join = new UserJoined_Packet();
+                                    join.userID = (uint)userID;
+                                    join.username = auth_request.username;
+                                    user_join.Contents = join;
 
-                                // Emitr mensagem para todos os utilizadores, excepto o atual
-                                MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
-
+                                    // Emitr mensagem para todos os utilizadores, excepto o atual
+                                    MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                }
                                 break;
 
                             case PacketType.REGISTER_REQUEST:
@@ -118,7 +121,7 @@ namespace Servidor
                         networkStream.Write(ack, 0, ack.Length);
                         if(userID != null)
                         {
-                            Console.WriteLine("Cliente {0} desligado.", userManagement.GetUsername((uint)userID));
+                            Console.WriteLine("Cliente {0} ({1}) desligado.", userManagement.GetUsername((uint)userID), userID);
                             userManagement.RemoveUser((uint)userID);
 
                             Basic_Packet saida_utilizador = new Basic_Packet();

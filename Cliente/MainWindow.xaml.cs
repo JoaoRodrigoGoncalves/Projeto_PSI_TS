@@ -66,7 +66,11 @@ namespace Cliente
 
                 // Ler resposta do tipo AUTH_RESPONSE
 
-                networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
+                {
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                }
 
                 Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
 
@@ -79,14 +83,13 @@ namespace Cliente
                         //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
                         this.Hide();
-                        Chat janela_chat = new Chat(textBox_nomeUtilizador.Text, (uint) resposta_login.userID, networkStream);
+                        Chat janela_chat = new Chat(textBox_nomeUtilizador.Text, (uint)resposta_login.userID, networkStream);
                         janela_chat.ShowDialog();
                     }
                     else //Implementar janela de mensagem caso haja um erro
                     {
                         //resposta_login.message; // String: Mensagem do servidor (usado caso haja um erro)
-                    } 
-                
+                    }
                 }
             }
             else
