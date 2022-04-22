@@ -89,6 +89,7 @@ namespace Cliente
                     else //Implementar janela de mensagem caso haja um erro
                     {
                         //resposta_login.message; // String: Mensagem do servidor (usado caso haja um erro)
+                        textBlock_Message.Text = "Erro! " + resposta_login.message;
                     }
                 }
             }
