@@ -48,52 +48,45 @@ namespace Cliente
             if(!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
             {
                 //Envia os dados do utilizador(username e password) para o servidor 
-                Basic_Packet pacote = new Basic_Packet();
-                pacote.Type = PacketType.AUTH_REQUEST;//Indicar que o pacote é um pedido de autenticação
+                Basic_Packet pedidoLogin = new Basic_Packet();
+                pedidoLogin.Type = PacketType.AUTH_REQUEST;//Indicar que o pacote é um pedido de autenticação
 
                 Auth_Request_Packet login = new Auth_Request_Packet();
                 login.username = textBox_nomeUtilizador.Text;
                 login.password = textBox_palavraPasse.Password;
 
-                pacote.Contents = login;
+                pedidoLogin.Contents = login;
 
-                byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pacote));
+                byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pedidoLogin));
                 networkStream.Write(dados, 0, dados.Length);
 
                 // Esperar e ler os dados enviados pelo servidor. Caso a autenticação
                 // tenha sido bem sucedida, guardar os dados do utilizador atual e mostrar janela de chat.
                 // Caso contrário indicar que os dados fornecidos estão incorretos
 
+                // Ler resposta do tipo AUTH_RESPONSE
 
+                networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
 
-                //Esconde a janela de login e abre a janela de chat 
-                /*this.Hide();
-                Chat janela_chat = new Chat(textBox_nomeUtilizador.Text);
-                janela_chat.ShowDialog();*/
+                Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
 
+                if (pacote.Type == PacketType.AUTH_RESPONSE)
+                {
+                    Auth_Response_Packet resposta_login = JsonConvert.DeserializeObject<Auth_Response_Packet>(pacote.Contents.ToString());
+
+                    if (resposta_login.success)// Boolean: Se o login foi feito com sucesso
+                    {
+                        //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
+                        //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
+                        this.Hide();
+                        Chat janela_chat = new Chat(textBox_nomeUtilizador.Text, (uint) resposta_login.userID, networkStream);
+                        janela_chat.ShowDialog();
+                    }
+                    else //Implementar janela de mensagem caso haja um erro
+                    {
+                        //resposta_login.message; // String: Mensagem do servidor (usado caso haja um erro)
+                    } 
                 
-            }
-            else
-            {
-                textBox_nomeUtilizador.BorderBrush = Brushes.Red;
-            }
-        }
-
-        private void button_registar_Click(object sender, RoutedEventArgs e)
-        {
-            // Código temporário para efeitos de teste
-
-            if (!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
-            {
-                if (!String.IsNullOrEmpty(textBox_palavraPasse.Password) || !String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
-                {
-                    this.Hide();
-                    Chat janela_chat = new Chat(textBox_nomeUtilizador.Text);
-                    janela_chat.ShowDialog();
-                }
-                else
-                {
-                    textBox_palavraPasse.BorderBrush = Brushes.Red;
                 }
             }
             else
@@ -118,6 +111,14 @@ namespace Cliente
             TextDecorationCollection decorations = new TextDecorationCollection();
             decorations.Clear();
             textBlock_linkRegistar.TextDecorations = decorations;
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            byte[] close = protocolSI.Make(ProtocolSICmdType.EOT);
+            networkStream.Write(close, 0, close.Length);
+            networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+            networkStream.Close();
         }
     }
 }

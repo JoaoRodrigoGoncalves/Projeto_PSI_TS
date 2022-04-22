@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Sockets;
 using System.Windows;
 
 namespace Cliente
@@ -9,14 +10,18 @@ namespace Cliente
     public partial class Chat : Window
     {
         private string utilizador;
+        private uint userid;
+        private NetworkStream networkStream;
 
-        public Chat(string username)
+        public Chat(string username, uint id, NetworkStream stream)
         {
             InitializeComponent();
 
             // Inicialização de variáveis
 
-            utilizador = username;
+            this.utilizador = username;
+            this.userid = id;
+            this.networkStream = stream;
 
             // Preencher elementos do UI
 
