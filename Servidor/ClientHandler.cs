@@ -67,7 +67,7 @@ namespace Servidor
 
                             case PacketType.AUTH_REQUEST:
 
-                                Auth_Request_Packet auth_request = (Auth_Request_Packet)dados.Contents;
+                                Auth_Request_Packet auth_request = JsonConvert.DeserializeObject<Auth_Request_Packet>(dados.Contents.ToString());
 
                                 // TODO: Verificar credenciais e obter imagem da base de dados
 
@@ -77,7 +77,7 @@ namespace Servidor
                                 Console.WriteLine("Cliente {0} juntou-se!", auth_request.username);
                                 userID = userManagement.GenerateUserID(); // Obter um id para este utilizador
                                 userManagement.AddUser((uint)userID, auth_request.username, null); // Adicionar à lista de utilizadores
-                                
+
                                 // Preencher dados de resposta
                                 Auth_Response_Packet auth = new Auth_Response_Packet();
                                 auth.success = true;

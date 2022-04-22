@@ -60,6 +60,12 @@ namespace Cliente
                 byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pacote));
                 networkStream.Write(dados, 0, dados.Length);
 
+                // Esperar e ler os dados enviados pelo servidor. Caso a autenticação
+                // tenha sido bem sucedida, guardar os dados do utilizador atual e mostrar janela de chat.
+                // Caso contrário indicar que os dados fornecidos estão incorretos
+
+
+
                 //Esconde a janela de login e abre a janela de chat 
                 /*this.Hide();
                 Chat janela_chat = new Chat(textBox_nomeUtilizador.Text);

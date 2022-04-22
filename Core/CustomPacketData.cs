@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Core
 {
@@ -23,9 +22,10 @@ namespace Core
         public PacketType Type { get; set; }
 
         /// <summary>
-        /// Conteúdos a enviar.
-        /// Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.
-        /// Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.
+        /// <para>Conteúdos a enviar.</para>
+        /// <para>Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.</para>
+        /// <para>Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.</para>
+        /// <para>No lado do cliente, isto é visto como um objeto porém, no lado do servidor, o JsonConvert identifica este objeto como uma string, pelo que deve ser deserialized novamente para o tipo certo.</para>
         /// </summary>
         public object Contents { get; set; }
     }
