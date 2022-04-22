@@ -4,6 +4,7 @@ using System;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace Servidor
 {
@@ -56,8 +57,23 @@ namespace Servidor
                                 break;
 
                             case PacketType.USER_LIST_REQUEST:
-                                // TODO: Implementar
-                                Console.WriteLine("WARN: Recebido packetType ainda não implementado");
+                                Basic_Packet user_list_response_packet = new Basic_Packet();
+                                user_list_response_packet.Type = PacketType.USER_LIST_RESPONSE;
+
+                                List<UserListItem_Packet> user_list = new List<UserListItem_Packet>();
+
+                                foreach(UserInfo user in userManagement.users)
+                                {
+                                    UserListItem_Packet this_user = new UserListItem_Packet();
+                                    this_user.userID = user.userID;
+                                    this_user.username = user.username;
+                                }
+
+                                user_list_response_packet.Contents = user_list;
+
+                                byte[] userList_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(user_list_response_packet));
+                                networkStream.Write(userList_byte_response, 0, userList_byte_response.Length);
+
                                 break;
 
                             case PacketType.MESSAGE_HISTORY_REQUEST:
@@ -71,38 +87,53 @@ namespace Servidor
 
                                 // TODO: Verificar credenciais e obter imagem da base de dados
 
+                                // Criar pacote base
                                 Basic_Packet auth_response = new Basic_Packet();
                                 auth_response.Type = PacketType.AUTH_RESPONSE;
 
-                                userID = userManagement.GenerateUserID(); // Obter um id para este utilizador
-                                Console.WriteLine("Cliente {0} ({1}) juntou-se!", auth_request.username, userID);
-                                userManagement.AddUser((uint)userID, auth_request.username, null, networkStream); // Adicionar à lista de utilizadores
-
-                                // Preencher dados de resposta
+                                // Instanciar resposta
                                 Auth_Response_Packet auth = new Auth_Response_Packet();
-                                auth.success = true;
-                                auth.userID = userID;
-                                auth.userImage = null;
-                                auth.message = null;
-                                auth_response.Contents = auth;
 
-                                byte[] data = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(auth_response));
-                                networkStream.Write(data, 0, data.Length);
-
-                                if(userManagement.users.Count > 1)
+                                // TODO: Remover esta verificação de DEBUG
+                                if(auth_request.username != "fail") // Se as credenciais estiverem corretos
                                 {
-                                    // Avisar todos os utilizadores de que alguém se juntou
-                                    Basic_Packet user_join = new Basic_Packet();
-                                    user_join.Type = PacketType.USER_JOINED;
+                                    userID = userManagement.GenerateUserID(); // Obter um id para este utilizador
+                                    Console.WriteLine("Cliente {0} ({1}) juntou-se!", auth_request.username, userID);
+                                    userManagement.AddUser((uint)userID, auth_request.username, null, networkStream); // Adicionar à lista de utilizadores
+                                    
+                                    // Preencher dados de resposta
+                                    auth.success = true;
+                                    auth.userID = userID;
+                                    auth.userImage = null;
+                                    auth.message = null;
 
-                                    UserJoined_Packet join = new UserJoined_Packet();
-                                    join.userID = (uint)userID;
-                                    join.username = auth_request.username;
-                                    user_join.Contents = join;
+                                    if (userManagement.users.Count > 1)
+                                    {
+                                        // Avisar todos os utilizadores de que alguém se juntou
+                                        Basic_Packet user_join = new Basic_Packet();
+                                        user_join.Type = PacketType.USER_JOINED;
 
-                                    // Emitr mensagem para todos os utilizadores, excepto o atual
-                                    MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                        UserJoined_Packet join = new UserJoined_Packet();
+                                        join.userID = (uint)userID;
+                                        join.username = auth_request.username;
+                                        user_join.Contents = join;
+
+                                        // Emitr mensagem para todos os utilizadores, excepto o atual
+                                        MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                    }
                                 }
+                                else
+                                {
+                                    // Preencher dados de resposta
+                                    auth.success = false;
+                                    auth.userID = null;
+                                    auth.userImage = null;
+                                    auth.message = "Dados de inicio de sessão incorretos";
+                                }
+
+                                auth_response.Contents = auth;
+                                byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(auth_response));
+                                networkStream.Write(auth_byte_response, 0, auth_byte_response.Length);
                                 break;
 
                             case PacketType.REGISTER_REQUEST:
