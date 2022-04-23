@@ -9,19 +9,33 @@ namespace Cliente
     /// </summary>
     public partial class Chat : Window
     {
-        private string utilizador;
-        private uint userid;
+        private class CurrentUser
+        {
+            public string username { get; }
+            public uint userID { get; }
+            public string imagemB64 { get; }
+
+            public CurrentUser(uint userID, string username, string imgB64)
+            {
+                this.userID = userID;
+                this.username = username;
+                this.imagemB64 = imgB64;
+            }
+        }
+
+        private CurrentUser user;
         private NetworkStream networkStream;
 
-        public Chat(string username, uint id, NetworkStream stream)
+        public Chat(uint id, string username, string userImageB64, NetworkStream stream)
         {
             InitializeComponent();
 
             // Inicialização de variáveis
 
-            this.utilizador = username;
-            this.userid = id;
+            user = new CurrentUser(id, username, userImageB64); // Inicialização dos dados deste utilizador
             this.networkStream = stream;
+
+            // Pedir lista de utilizadores ativos
 
             // Preencher elementos do UI
 
@@ -32,17 +46,14 @@ namespace Cliente
 
             ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
             messagePanel.Children.Add(joinNotification);
-
-            ///
-            
         }
 
         private void adicionarMensagemCliente(string mensagem)
         {
-            if (String.IsNullOrEmpty(mensagem) || String.IsNullOrWhiteSpace(mensagem))
+            if (String.IsNullOrWhiteSpace(mensagem))
                 return;
 
-            ClientMessageControl message = new ClientMessageControl(this.utilizador, DateTime.Now, mensagem);
+            ClientMessageControl message = new ClientMessageControl(user.username, DateTime.Now, mensagem);
             messagePanel.Children.Add(message);
         }
 

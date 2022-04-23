@@ -9,7 +9,7 @@ namespace Servidor
         /// Envia a mensagem indicada para todos os utilizadores ativos
         /// </summary>
         /// <param name="message">Mensagem a passar ao <see cref="ProtocolSI"/></param>
-        /// <param name="excludedUser">id do utilizador a excluir do broadcast</param>
+        /// <param name="excludedUser">ID do utilizador a excluir do broadcast</param>
         public static void BroadcastMessage(string message, uint? excludedUser = null)
         {
             UserManagement management = new UserManagement();
