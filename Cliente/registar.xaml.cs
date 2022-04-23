@@ -17,20 +17,18 @@ namespace Cliente
     /// <summary>
     /// Interaction logic for registar.xaml
     /// </summary>
-    public partial class registar : Window
+    public partial class Registar : Window
     {
-        public registar()
+        public Registar()
         {
             InitializeComponent();
         }
 
         private void button_registar_Click(object sender, RoutedEventArgs e)
         {
-            // Código temporário para efeitos de teste
-
-            if (!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
+            if (!String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
             {
-                if (!String.IsNullOrEmpty(textBox_palavraPasse.Password) || !String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
+                if (!String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
                 {
                     if (textBox_palavraPasse.Password == textBox_verificarPalavraPasse.Password) {
                         //Falta processar os dados do servidor
@@ -38,6 +36,8 @@ namespace Cliente
                     }
                     else
                     {
+                        textBlock_ErrorMessage.Text = "As palavras-passse não coincidem.";
+                        textBox_palavraPasse.BorderBrush = Brushes.Red;
                         textBox_verificarPalavraPasse.BorderBrush = Brushes.Red;
                     }
                 }

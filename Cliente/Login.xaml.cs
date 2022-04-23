@@ -23,14 +23,14 @@ namespace Cliente
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class Login : Window
     {
         private const int PORT = 5000;
         NetworkStream networkStream;
         ProtocolSI protocolSI;
         TcpClient client;
 
-        public MainWindow()
+        public Login()
         {
             InitializeComponent();
 
@@ -45,7 +45,7 @@ namespace Cliente
         {
             // Código temporário para efeitos de teste
 
-            if(!String.IsNullOrEmpty(textBox_nomeUtilizador.Text) || !String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
+            if(!String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
             {
                 //Envia os dados do utilizador(username e password) para o servidor 
                 Basic_Packet pedidoLogin = new Basic_Packet();
@@ -74,6 +74,11 @@ namespace Cliente
 
                 Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
 
+                /**
+                 * Verificar se o tipo de pacote é um AUTH_RESPONSE.
+                 * Em principio, isto há de funcionar. Esperar pela implementação das mensagens
+                 * para ver se deixa de funcionar como deve de ser
+                 */
                 if (pacote.Type == PacketType.AUTH_RESPONSE)
                 {
                     Auth_Response_Packet resposta_login = JsonConvert.DeserializeObject<Auth_Response_Packet>(pacote.Contents.ToString());
@@ -83,13 +88,13 @@ namespace Cliente
                         //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
                         this.Hide();
-                        Chat janela_chat = new Chat(textBox_nomeUtilizador.Text, (uint)resposta_login.userID, networkStream);
+                        Chat janela_chat = new Chat((uint)resposta_login.userID, textBox_nomeUtilizador.Text, resposta_login.userImage, networkStream);
                         janela_chat.ShowDialog();
                     }
-                    else //Implementar janela de mensagem caso haja um erro
+                    else
                     {
                         //resposta_login.message; // String: Mensagem do servidor (usado caso haja um erro)
-                        textBlock_Message.Text = "Erro! " + resposta_login.message;
+                        textBlock_Message.Text = "Erro! " + resposta_login.message; // Mostrar mensagem de erro do servidor
                     }
                 }
             }
@@ -101,7 +106,7 @@ namespace Cliente
 
         private void textBlock_linkRegistar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            registar janela_registar = new registar();
+            Registar janela_registar = new Registar();
             janela_registar.ShowDialog();
         }
 

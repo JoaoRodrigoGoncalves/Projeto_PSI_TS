@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using Core;
-using Newtonsoft.Json;
-using EI.SI;
 using System.Net;
 using System.Net.Sockets;
-using System.IO;
 
 namespace Servidor
 {
@@ -20,7 +15,7 @@ namespace Servidor
 
             IPEndPoint endpoint = null;
 
-            if(Properties.Settings.Default.listenAddress != "127.0.0.1" || Properties.Settings.Default.port != 5000)
+            if(Properties.Settings.Default.listenAddress != DEFAULT_ADDRESS.ToString() || Properties.Settings.Default.port != DEFAULT_PORT)
             {
                 IPAddress address;
                 if(IPAddress.TryParse(Properties.Settings.Default.listenAddress, out address))
@@ -29,7 +24,7 @@ namespace Servidor
                 }
                 else
                 {
-                    Console.WriteLine("ERRO: Endereço IP fornecido no ficheiro de configuração inválido.");
+                    Console.WriteLine("ERRO: Endereço IP fornecido no ficheiro de configuração é inválido.");
                     Console.WriteLine("Prima qualquer botão para terinar a execução");
                     Console.ReadKey();
                     Environment.Exit(1);
@@ -37,12 +32,11 @@ namespace Servidor
             }
             else
             {
-                endpoint = new IPEndPoint(IPAddress.Loopback, DEFAULT_PORT);
+                endpoint = new IPEndPoint(DEFAULT_ADDRESS, DEFAULT_PORT);
             }
 
             TcpListener listener = new TcpListener(endpoint);
             listener.Start();
-            ProtocolSI protocolSI = new ProtocolSI();
             Console.WriteLine("Servidor iniciado em " + endpoint.Address + ":" + endpoint.Port);
 
             while (true)
@@ -51,7 +45,6 @@ namespace Servidor
                 ClientHandler handler = new ClientHandler(client);
                 handler.Handle();
             }
-
         }
     }
 }

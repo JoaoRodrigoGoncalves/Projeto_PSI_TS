@@ -17,6 +17,9 @@ namespace Core
         REGISTER_RESPONSE
     }
 
+    /// <summary>
+    /// Pacote base que encapsula o tipo de informação a ser pedida/enviada e os dados relativos a essa informação
+    /// </summary>
     public class Basic_Packet
     {
         public PacketType Type { get; set; }
@@ -25,7 +28,7 @@ namespace Core
         /// <para>Conteúdos a enviar.</para>
         /// <para>Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.</para>
         /// <para>Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.</para>
-        /// <para>No lado do cliente, isto é visto como um objeto porém, no lado do servidor, o JsonConvert identifica este objeto como uma string, pelo que deve ser deserialized novamente para o tipo certo.</para>
+        /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar serialize é tomado como String e precisa de ser deserialized</para>
         /// </summary>
         public object Contents { get; set; }
     }
@@ -40,6 +43,7 @@ namespace Core
         public string username { get; set; }
 
     }
+
 
     public class Message_Packet
     {
