@@ -1,22 +1,12 @@
 ﻿using System;
 using EI.SI;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Net;
 using Core;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace Cliente
 {
@@ -25,8 +15,6 @@ namespace Cliente
     /// </summary>
     public partial class Login : Window
     {
-        private const int PORT = 5000;
-        NetworkStream networkStream;
         ProtocolSI protocolSI;
         TcpClient client;
 
@@ -34,11 +22,50 @@ namespace Cliente
         {
             InitializeComponent();
 
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Loopback, PORT);
-            client = new TcpClient();
-            client.Connect(endPoint);
-            networkStream = client.GetStream();
-            protocolSI = new ProtocolSI();
+            try
+            {
+                IPAddress address;
+
+                if(IPAddress.TryParse(Properties.Settings.Default.ipaddress, out address) || (Properties.Settings.Default.port < 1000 || Properties.Settings.Default.port > 65535))
+                {
+                    // Se o endereço IP/porto do ficheiro de configuração seja válido, iniciamos o endpoint
+                    IPEndPoint endPoint = new IPEndPoint(address, Properties.Settings.Default.port);
+                    client = new TcpClient();
+                    client.Connect(endPoint);
+                    Session.networkStream = client.GetStream();
+                    protocolSI = new ProtocolSI();
+
+                    textBox_nomeUtilizador.Focus(); // Colocar o cursor automaticamente na caixa de nome de utilizador
+                }
+                else
+                {
+                    // Caso contrário, mostramos uma mensagem de erro e perguntamos se o utilizador pretende repor as configurações padrão
+                    if(MessageBox.Show("Endereço IP ou porto indicado no ficheiro de configurações inválido. Pretendes repor as configurações padrão?", "Endereço IP inválido", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
+                    {
+                        // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
+                        ResetAndRestart();
+                    }
+                    else
+                    {
+                        // Caso contrário, saímos com erro -3
+                        Environment.Exit(-3);
+                    }
+                }
+            }
+            catch
+            {
+                // Ocorreu um erro ao tentar ligar ao servidor. Perguntamos se pretende repor configurações padrão
+                if (MessageBox.Show("Ocorreu um erro ao tentar ligar ao servidor. Pretendes repor as configurações padrão?", "Erro ao tentar ligar ao servidor", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
+                {
+                    // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
+                    ResetAndRestart();
+                }
+                else
+                {
+                    // Caso contrário, saímos com erro -2
+                    Environment.Exit(-2);
+                }
+            }
         }
 
         private void button_entrar_Click(object sender, RoutedEventArgs e)
@@ -58,7 +85,7 @@ namespace Cliente
                 pedidoLogin.Contents = login;
 
                 byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pedidoLogin));
-                networkStream.Write(dados, 0, dados.Length);
+                Session.networkStream.Write(dados, 0, dados.Length);
 
                 // Esperar e ler os dados enviados pelo servidor. Caso a autenticação
                 // tenha sido bem sucedida, guardar os dados do utilizador atual e mostrar janela de chat.
@@ -66,10 +93,10 @@ namespace Cliente
 
                 // Ler resposta do tipo AUTH_RESPONSE
 
-                networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                 while (protocolSI.GetCmdType() != ProtocolSICmdType.DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
                 {
-                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                    Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                 }
 
                 Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
@@ -88,7 +115,10 @@ namespace Cliente
                         //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
                         this.Hide();
-                        Chat janela_chat = new Chat((uint)resposta_login.userID, textBox_nomeUtilizador.Text, resposta_login.userImage, networkStream);
+                        Session.userID = resposta_login.userID;
+                        Session.username = textBox_nomeUtilizador.Text;
+                        Session.userImageB64 = resposta_login.userImage;
+                        Chat janela_chat = new Chat();
                         janela_chat.ShowDialog();
                     }
                     else
@@ -102,6 +132,15 @@ namespace Cliente
             {
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
+        }
+        
+        private void ResetAndRestart()
+        {
+            Properties.Settings.Default.ipaddress = "127.0.0.1";
+            Properties.Settings.Default.port = 5000;
+            Properties.Settings.Default.Save();
+            Process.Start(Application.ResourceAssembly.Location);
+            Environment.Exit(0);
         }
 
         private void textBlock_linkRegistar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -124,10 +163,19 @@ namespace Cliente
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            byte[] close = protocolSI.Make(ProtocolSICmdType.EOT);
-            networkStream.Write(close, 0, close.Length);
-            networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
-            networkStream.Close();
+            Session.FecharSessao();
+        }
+
+        private void BTN_Settings_Click(object sender, RoutedEventArgs e)
+        {
+            Settings janela_definicoes = new Settings();
+            janela_definicoes.ShowDialog();
+        }
+
+        private void textBox_palavraPasse_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if(e.Key == System.Windows.Input.Key.Enter)
+                button_entrar_Click(sender, e);
         }
     }
 }

@@ -9,37 +9,15 @@ namespace Cliente
     /// </summary>
     public partial class Chat : Window
     {
-        private class CurrentUser
-        {
-            public string username { get; }
-            public uint userID { get; }
-            public string imagemB64 { get; }
-
-            public CurrentUser(uint userID, string username, string imgB64)
-            {
-                this.userID = userID;
-                this.username = username;
-                this.imagemB64 = imgB64;
-            }
-        }
-
-        private CurrentUser user;
-        private NetworkStream networkStream;
-
-        public Chat(uint id, string username, string userImageB64, NetworkStream stream)
+        public Chat()
         {
             InitializeComponent();
-
-            // Inicialização de variáveis
-
-            user = new CurrentUser(id, username, userImageB64); // Inicialização dos dados deste utilizador
-            this.networkStream = stream;
 
             // Pedir lista de utilizadores ativos
 
             // Preencher elementos do UI
 
-            textBlock_nomeUtilizador.Text = username;
+            textBlock_nomeUtilizador.Text = Session.username;
             textBlock_listaUtilizadores.Text = "Eu, Outro"; // TODO: Ao longo do carregamento das informações do servidor, este campo deve ser alterado
 
             // Adição de notificação de entrada
@@ -53,7 +31,7 @@ namespace Cliente
             if (String.IsNullOrWhiteSpace(mensagem))
                 return;
 
-            ClientMessageControl message = new ClientMessageControl(user.username, DateTime.Now, mensagem);
+            ClientMessageControl message = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
             messagePanel.Children.Add(message);
         }
 

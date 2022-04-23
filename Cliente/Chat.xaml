@@ -159,15 +159,15 @@
         <StackPanel>
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                    <ColumnDefinition Width="4*"></ColumnDefinition>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="1.25*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <Border Width="50" Height="50" CornerRadius="80" BorderThickness="1" BorderBrush="#0be044">
                         <Border.Background>
-                            <ImageBrush ImageSource="/userIcon.png"/>
+                            <ImageBrush ImageSource="/Resources/userIcon.png"/>
                         </Border.Background>
                     </Border>
                     <TextBlock
