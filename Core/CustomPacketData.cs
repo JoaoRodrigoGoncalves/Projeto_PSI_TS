@@ -28,7 +28,7 @@ namespace Core
         /// <para>Conteúdos a enviar.</para>
         /// <para>Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.</para>
         /// <para>Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.</para>
-        /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar deserialize é tomado como String e precisa de ser deserialized</para>
+        /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar deserialize do pacote todo, é tomado como String e precisa de ser deserialized individualmente</para>
         /// </summary>
         public object Contents { get; set; }
     }
