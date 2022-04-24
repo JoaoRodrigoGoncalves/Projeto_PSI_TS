@@ -41,9 +41,9 @@ namespace Core
     {
         public uint userID { get; set; }
         public string username { get; set; }
+        public string userImage { get; set; }
 
     }
-
 
     public class Message_Packet
     {

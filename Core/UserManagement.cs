@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Core
 {
@@ -32,28 +28,6 @@ namespace Core
         /////// Classe
 
         public List<UserInfo> users = new List<UserInfo>();
-
-        /// <summary>
-        /// Gera um ID de utilizador
-        /// </summary>
-        /// <returns></returns>
-        public uint GenerateUserID()
-        {
-            // TODO: Alterar no futo para o ID do utilizador na base de dados
-            Random random = new Random();
-            bool success = false;
-            uint userID = 0;
-
-            while(!success)
-            {
-                userID = (uint)random.Next(1, 101);
-
-                if(GetUser(userID) == null)
-                    success = true;
-
-            }
-            return userID;
-        }
 
         /// <summary>
         /// [CLIENT-SIDE] Adiciona um utilizador à lista de utilizadores

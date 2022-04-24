@@ -11,7 +11,8 @@ namespace Servidor
 
         static void Main(string[] args)
         {
-            Console.WriteLine("A iniciar servidor...");
+            Logger.StartLogger();
+            Logger.Log("A iniciar servidor...");
 
             IPEndPoint endpoint = null;
 
@@ -24,8 +25,8 @@ namespace Servidor
                 }
                 else
                 {
-                    Console.WriteLine("ERRO: Endereço IP fornecido no ficheiro de configuração é inválido.");
-                    Console.WriteLine("Prima qualquer botão para terinar a execução");
+                    Logger.Log("ERRO: Endereço IP fornecido no ficheiro de configuração é inválido.");
+                    Logger.Log("Prima qualquer botão para terinar a execução");
                     Console.ReadKey();
                     Environment.Exit(1);
                 }
@@ -37,7 +38,7 @@ namespace Servidor
 
             TcpListener listener = new TcpListener(endpoint);
             listener.Start();
-            Console.WriteLine("Servidor iniciado em " + endpoint.Address + ":" + endpoint.Port);
+            Logger.Log("Servidor iniciado em " + endpoint.Address + ":" + endpoint.Port);
 
             while (true)
             {

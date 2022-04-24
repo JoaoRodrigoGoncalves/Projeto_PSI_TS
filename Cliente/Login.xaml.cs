@@ -1,12 +1,9 @@
 ﻿using System;
 using EI.SI;
-using System.Net.Sockets;
 using System.Windows;
 using System.Windows.Media;
-using System.Net;
 using Core;
 using Newtonsoft.Json;
-using System.Diagnostics;
 
 namespace Cliente
 {
@@ -15,64 +12,28 @@ namespace Cliente
     /// </summary>
     public partial class Login : Window
     {
-        ProtocolSI protocolSI;
-        TcpClient client;
+        ProtocolSI protocolSI = new ProtocolSI();
 
         public Login()
         {
             InitializeComponent();
-
-            try
-            {
-                IPAddress address;
-
-                if(IPAddress.TryParse(Properties.Settings.Default.ipaddress, out address) || (Properties.Settings.Default.port < 1000 || Properties.Settings.Default.port > 65535))
-                {
-                    // Se o endereço IP/porto do ficheiro de configuração seja válido, iniciamos o endpoint
-                    IPEndPoint endPoint = new IPEndPoint(address, Properties.Settings.Default.port);
-                    client = new TcpClient();
-                    client.Connect(endPoint);
-                    Session.networkStream = client.GetStream();
-                    protocolSI = new ProtocolSI();
-
-                    textBox_nomeUtilizador.Focus(); // Colocar o cursor automaticamente na caixa de nome de utilizador
-                }
-                else
-                {
-                    // Caso contrário, mostramos uma mensagem de erro e perguntamos se o utilizador pretende repor as configurações padrão
-                    if(MessageBox.Show("Endereço IP ou porto indicado no ficheiro de configurações inválido. Pretendes repor as configurações padrão?", "Endereço IP inválido", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
-                    {
-                        // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
-                        ResetAndRestart();
-                    }
-                    else
-                    {
-                        // Caso contrário, saímos com erro -3
-                        Environment.Exit(-3);
-                    }
-                }
-            }
-            catch
-            {
-                // Ocorreu um erro ao tentar ligar ao servidor. Perguntamos se pretende repor configurações padrão
-                if (MessageBox.Show("Ocorreu um erro ao tentar ligar ao servidor. Pretendes repor as configurações padrão?", "Erro ao tentar ligar ao servidor", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
-                {
-                    // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
-                    ResetAndRestart();
-                }
-                else
-                {
-                    // Caso contrário, saímos com erro -2
-                    Environment.Exit(-2);
-                }
-            }
         }
 
         private void button_entrar_Click(object sender, RoutedEventArgs e)
         {
-            // Código temporário para efeitos de teste
+            /**
+             * Por causa da implementação das definições de servidor,
+             * é necessário que a ligação só comece a ser establecida
+             * depois de o utilizador pressionar o botão de inicio de sessão.
+             * De forma a que isso seja possível, é necessário verificar
+             * se a ligação já foi establecida anteriormente, de forma
+             * a impedir que se tente iniciar a ligação multiplas vezes
+             */
+            
+            if(Session.Client == null)
+                Session.StartTCPSession();
 
-            if(!String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
+            if (!String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
             {
                 //Envia os dados do utilizador(username e password) para o servidor 
                 Basic_Packet pedidoLogin = new Basic_Packet();
@@ -133,15 +94,6 @@ namespace Cliente
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
         }
-        
-        private void ResetAndRestart()
-        {
-            Properties.Settings.Default.ipaddress = "127.0.0.1";
-            Properties.Settings.Default.port = 5000;
-            Properties.Settings.Default.Save();
-            Process.Start(Application.ResourceAssembly.Location);
-            Environment.Exit(0);
-        }
 
         private void textBlock_linkRegistar_Click(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -163,7 +115,7 @@ namespace Cliente
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Session.FecharSessao();
+            Session.CloseTCPSession();
         }
 
         private void BTN_Settings_Click(object sender, RoutedEventArgs e)

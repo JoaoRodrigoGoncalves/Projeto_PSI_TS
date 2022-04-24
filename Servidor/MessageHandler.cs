@@ -1,5 +1,6 @@
 ﻿using Core;
 using EI.SI;
+using System;
 
 namespace Servidor
 {
@@ -19,6 +20,7 @@ namespace Servidor
 
             if(excludedUser.HasValue) // Verificar se há um utilizador a ser excluído
             {
+                Logger.LogQuietly(String.Format("Broadcast excluíndo {0}", excludedUser));
                 foreach (UserInfo user in management.users)
                 {
                     if (excludedUser.Value == user.userID)
@@ -29,6 +31,7 @@ namespace Servidor
             }
             else
             {
+                Logger.LogQuietly("Broadcast total");
                 foreach (UserInfo user in management.users)
                 {
                     user.userStream.Write(data, 0, data.Length);

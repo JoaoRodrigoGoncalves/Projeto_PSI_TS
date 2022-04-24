@@ -16,6 +16,7 @@ namespace Servidor
         internal ClientHandler(TcpClient client)
         {
             this.client = client;
+            Logger.LogQuietly(String.Format("Nova ligação de {0}.", Logger.GetSocket(client)));
         }
 
         internal void Handle()
@@ -48,21 +49,46 @@ namespace Servidor
                         // Verificar qual o tipo de pedido
                         switch (dados.Type)
                         {
+                            #region MESSAGE
                             case PacketType.MESSAGE:
 
-                                // TODO: Extrair os dados para o log
+                                if(dados.Contents != null)
+                                {
+                                    Message_Packet mensagem = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
 
-                                // Broadcast para todos os utilizadores, excepto o que enviou a mensagem
-                                MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(dados), userID);
-                                break;
+                                    /**
+                                     * Apesar do cliente nos enviar o seu userID, para ter a certeza que não há
+                                     * nenhuma tentativa de spoofing do ID, iremos reescrever o ID no pacote com base na
+                                     * instancia do ClientHandler atual.
+                                     */
+                                    mensagem.userID = (uint)userID;
+                                    dados.Contents = mensagem;
 
+
+                                    Logger.Log(String.Format("<{0}> {1}", userManagement.GetUsername(mensagem.userID), mensagem.message));
+                                    Database.SaveUserMessage(mensagem.userID, mensagem.message);
+
+                                    // Broadcast para todos os utilizadores, excepto o que enviou a mensagem
+                                    MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(dados), userID);
+                                }
+                                else
+                                {
+                                    Logger.Log("Recebido pacote mal formatado do tipo MESSAGE");
+                                    Logger.LogQuietly(protocolSI.GetStringFromData());
+                                }
+
+                                break; 
+                            #endregion
+
+                            #region USER_LIST_REQUEST
                             case PacketType.USER_LIST_REQUEST:
+                                
                                 Basic_Packet user_list_response_packet = new Basic_Packet();
                                 user_list_response_packet.Type = PacketType.USER_LIST_RESPONSE;
 
                                 List<UserListItem_Packet> user_list = new List<UserListItem_Packet>();
 
-                                foreach(UserInfo user in userManagement.users)
+                                foreach (UserInfo user in userManagement.users)
                                 {
                                     UserListItem_Packet this_user = new UserListItem_Packet();
                                     this_user.userID = user.userID;
@@ -75,84 +101,191 @@ namespace Servidor
                                 networkStream.Write(userList_byte_response, 0, userList_byte_response.Length);
 
                                 break;
+                            #endregion
 
+                            #region MESSAGE_HISTORY_REQUEST
                             case PacketType.MESSAGE_HISTORY_REQUEST:
-                                // TODO: Implementar
-                                Console.WriteLine("WARN: Recebido packetType ainda não implementado");
-                                break;
 
-                            case PacketType.AUTH_REQUEST:
-
-                                Auth_Request_Packet auth_request = JsonConvert.DeserializeObject<Auth_Request_Packet>(dados.Contents.ToString());
-
-                                // TODO: Verificar credenciais e obter imagem da base de dados
-
-                                // Criar pacote base
-                                Basic_Packet auth_response = new Basic_Packet();
-                                auth_response.Type = PacketType.AUTH_RESPONSE;
-
-                                // Instanciar resposta
-                                Auth_Response_Packet auth = new Auth_Response_Packet();
-
-                                // TODO: Remover esta verificação de DEBUG
-                                if(auth_request.username != "fail") // Se as credenciais estiverem corretos
+                                if(dados.Contents != null)
                                 {
-                                    userID = userManagement.GenerateUserID(); // Obter um id para este utilizador
-                                    Console.WriteLine("Cliente {0} ({1}) juntou-se!", auth_request.username, userID);
-                                    userManagement.AddUser((uint)userID, auth_request.username, null, networkStream); // Adicionar à lista de utilizadores
-                                    
-                                    // Preencher dados de resposta
-                                    auth.success = true;
-                                    auth.userID = userID;
-                                    auth.userImage = null;
-                                    auth.message = null;
-
-                                    if (userManagement.users.Count > 1)
+                                    if(userManagement.GetUser((uint)dados.Contents) != null)
                                     {
-                                        // Avisar todos os utilizadores de que alguém se juntou
-                                        Basic_Packet user_join = new Basic_Packet();
-                                        user_join.Type = PacketType.USER_JOINED;
+                                        List<UserMessageHistoryItem_Packet> messageHistory = Database.GetMessageHistory((uint)dados.Contents);
 
-                                        UserJoined_Packet join = new UserJoined_Packet();
-                                        join.userID = (uint)userID;
-                                        join.username = auth_request.username;
-                                        user_join.Contents = join;
+                                        Basic_Packet messageHistory_response_packet = new Basic_Packet();
+                                        messageHistory_response_packet.Type = PacketType.MESSAGE_HISTORY_RESPONSE;
+                                        messageHistory_response_packet.Contents = messageHistory;
 
-                                        // Emitr mensagem para todos os utilizadores, excepto o atual
-                                        MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                        byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(messageHistory_response_packet));
+                                        networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
+                                    }
+                                    else
+                                    {
+                                        Logger.Log("Recebido pacote com conteúdos inválidos.");
+                                        Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
                                 }
                                 else
                                 {
-                                    // Preencher dados de resposta
-                                    auth.success = false;
-                                    auth.userID = null;
-                                    auth.userImage = null;
-                                    auth.message = "Dados de inicio de sessão incorretos";
+                                    Logger.Log("Recebido pacote mal formatado do tipo MESSAGE_HISTORY_REQUEST");
+                                    Logger.LogQuietly(protocolSI.GetStringFromData());
+                                }
+                                break; 
+                            #endregion
+
+                            #region AUTH_REQUEST
+                            case PacketType.AUTH_REQUEST:
+
+                                if(dados.Contents != null)
+                                {
+                                    Auth_Request_Packet auth_request = JsonConvert.DeserializeObject<Auth_Request_Packet>(dados.Contents.ToString());
+                                    
+                                    if(!String.IsNullOrWhiteSpace(auth_request.username) || !String.IsNullOrWhiteSpace(auth_request.password))
+                                    {
+                                        // Criar pacote base
+                                        Basic_Packet auth_response = new Basic_Packet();
+                                        auth_response.Type = PacketType.AUTH_RESPONSE;
+
+                                        // Instanciar resposta
+                                        Auth_Response_Packet auth = new Auth_Response_Packet();
+
+                                        Database.ClientInfo dados_cliente;
+                                        string errorMessage = null; // necessário para ir buscar a mensagem de erro à função de login
+
+                                        // Se as credenciais estiverem corretas
+                                        if (Database.LogUserIn(auth_request.username, auth_request.password, out dados_cliente, out errorMessage))
+                                        {
+                                            userID = dados_cliente.userID;
+                                            Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
+
+                                            // Adicionar à lista de utilizadores
+                                            userManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
+
+                                            // Preencher dados de resposta
+                                            auth.success = true;
+                                            auth.userID = userID;
+                                            auth.userImage = dados_cliente.imageB64;
+                                            auth.message = null;
+
+                                            if (userManagement.users.Count > 1)
+                                            {
+                                                // Se existirem utilizadores ativos, avisa-los que alguém se juntou
+                                                Basic_Packet user_join = new Basic_Packet();
+                                                user_join.Type = PacketType.USER_JOINED;
+
+                                                UserJoined_Packet join = new UserJoined_Packet();
+                                                join.userID = dados_cliente.userID;
+                                                join.username = dados_cliente.username;
+                                                join.userImage = dados_cliente.imageB64;
+                                                user_join.Contents = join;
+
+                                                // Emitr mensagem para todos os utilizadores, excepto o atual
+                                                MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // Preencher dados de resposta
+                                            auth.success = false;
+                                            auth.userID = null;
+                                            auth.userImage = null;
+                                            auth.message = errorMessage;
+                                        }
+
+                                        auth_response.Contents = auth;
+                                        byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(auth_response));
+                                        networkStream.Write(auth_byte_response, 0, auth_byte_response.Length);
+                                    }
+                                    else
+                                    {
+                                        Logger.Log("Recebido pacote com conteúdos inválidos");
+                                        Logger.LogQuietly(protocolSI.GetStringFromData());
+                                    }
+                                }
+                                else
+                                {
+                                    Logger.Log("Recebido pacote mal formatado do tipo AUTH_REQUEST");
+                                    Logger.LogQuietly(protocolSI.GetStringFromData());
                                 }
 
-                                auth_response.Contents = auth;
-                                byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(auth_response));
-                                networkStream.Write(auth_byte_response, 0, auth_byte_response.Length);
                                 break;
+                            #endregion
 
+                            #region REGISTER_REQUEST
                             case PacketType.REGISTER_REQUEST:
-                                // TODO: Implementar
-                                Console.WriteLine("WARN: Recebido packetType ainda não implementado");
-                                break;
+
+                                if(dados.Contents != null)
+                                {
+                                    Register_Request_Packet register_request = JsonConvert.DeserializeObject<Register_Request_Packet>(dados.Contents.ToString());
+
+                                    // Criar o pacote base
+                                    Basic_Packet register_response = new Basic_Packet();
+                                    register_response.Type = PacketType.REGISTER_RESPONSE;
+
+                                    // Instanciar a resposta
+                                    Register_Response_Packet register = new Register_Response_Packet();
+                                
+                                    /**
+                                     * Verificações de comprimento máximo do nome de utilizador e de segurança de password
+                                     */
+
+                                    if (String.IsNullOrWhiteSpace(register_request.username) || String.IsNullOrWhiteSpace(register_request.password))
+                                    {
+                                        register.success = false;
+                                        register.message = "O campo username ou passowrd devem ser preenchidos";
+                                    }
+                                    else
+                                    {
+                                        if (register_request.username.Length < 15)
+                                        {
+                                            if (register_request.password.Length > 8)
+                                            {
+                                                if(Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
+                                                {
+                                                    register.success = true;
+                                                    register.message = null;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                register.success = false;
+                                                register.message = "A password não cumpre os requisitos minimos (8 caracteres)";
+                                            }
+                                        }
+                                        else
+                                        {
+                                            register.success = false;
+                                            register.message = "O username não pode ser maior do que 15 caracteres";
+                                        }
+                                    }
+
+                                    register_response.Contents = register;
+
+                                    byte[] register_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(register_response));
+                                    networkStream.Write(register_byte_response, 0, register_byte_response.Length);
+                                }
+                                else
+                                {
+                                    Logger.Log("Recebido pacote mal formatado do tipo REGISTER_REQUEST");
+                                    Logger.LogQuietly(protocolSI.GetStringFromData());
+                                }
+                                break; 
+                            #endregion
 
                             default:
-                                Console.WriteLine("WARN: Recebido packetType inválido. A ignorar pedido");
+                                Logger.Log("WARN: Recebido packetType inválido. Pedido ignorado");
                                 break;
                         }
                         break;
 
+                    #region EOT
                     case ProtocolSICmdType.EOT:
+                        Logger.LogQuietly(String.Format("Ligação de {0} desligada.", Logger.GetSocket(client)));
                         ack = protocolSI.Make(ProtocolSICmdType.ACK);
                         networkStream.Write(ack, 0, ack.Length);
-                        if(userID != null)
+                        if (userID != null)
                         {
-                            Console.WriteLine("Cliente {0} ({1}) desligado.", userManagement.GetUsername((uint)userID), userID);
+                            Logger.Log(String.Format("Cliente {0} ({1}) desligado.", userManagement.GetUsername((uint)userID), userID));
                             userManagement.RemoveUser((uint)userID);
 
                             Basic_Packet saida_utilizador = new Basic_Packet();
@@ -165,7 +298,8 @@ namespace Servidor
                              */
                             MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(saida_utilizador));
                         }
-                        break;
+                        break; 
+                        #endregion
                 }
             }
             networkStream.Close();
