@@ -3,36 +3,14 @@ using System.Net.Sockets;
 
 namespace Core
 {
-    public class UserManagement
+    public static class UserManagement
     {
-        //////// Padrão Singleton
-        private static UserManagement singleton;
-
-        private static readonly object padlock = new object();
-
-        public static UserManagement Retrieve
-        {
-            get
-            {
-                lock (padlock)
-                {
-                    if (singleton == null)
-                    {
-                        singleton = new UserManagement();
-                    }
-                    return singleton;
-                }
-            }
-        }
-
-        /////// Classe
-
-        public List<UserInfo> users = new List<UserInfo>();
+        public static List<UserInfo> users = new List<UserInfo>();
 
         /// <summary>
         /// [CLIENT-SIDE] Adiciona um utilizador à lista de utilizadores
         /// </summary>
-        public void AddUser(uint userID, string username, string userImageB64)
+        public static void AddUser(uint userID, string username, string userImageB64)
         {
             UserInfo newUser = new UserInfo(userID, username, userImageB64);
             users.Add(newUser);
@@ -41,7 +19,7 @@ namespace Core
         /// <summary>
         /// [SERVER-SIDE] Adiciona um utilizador à lista de utilizadores
         /// </summary>
-        public void AddUser(uint userID, string username, string userImageB64, NetworkStream userStream)
+        public static void AddUser(uint userID, string username, string userImageB64, NetworkStream userStream)
         {
             UserInfo newUser = new UserInfo(userID, username, userImageB64, userStream);
             users.Add(newUser);
@@ -52,7 +30,7 @@ namespace Core
         /// </summary>
         /// <param name="userID">ID do utilizador</param>
         /// <returns>Objeto <see cref="UserInfo"/> com todos os dados do utilizador</returns>
-        public UserInfo GetUser(uint userID)
+        public static UserInfo GetUser(uint userID)
         {
             return users.Find(user => user.userID == userID);
         }
@@ -62,7 +40,7 @@ namespace Core
         /// </summary>
         /// <param name="userID">ID do utilizador</param>
         /// <returns>Username do utilizador</returns>
-        public string GetUsername(uint userID)
+        public static string GetUsername(uint userID)
         {
             return users.Find(user => user.userID == userID).username;
         }
@@ -71,7 +49,7 @@ namespace Core
         /// Remove um utilizador da lista de utilizadores com base no seu ID
         /// </summary>
         /// <param name="userID">ID do utilizador</param>
-        public void RemoveUser(uint userID)
+        public static void RemoveUser(uint userID)
         {
             users.Remove(GetUser(userID));
         }

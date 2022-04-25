@@ -17,7 +17,7 @@ namespace Servidor
         /// <summary>
         /// Cria e devolve uma ligação à base de dados
         /// </summary>
-        /// <returns></returns>
+        /// <returns><see cref="MySqlConnection"/></returns>
         private MySqlConnection ConnectToDatabase()
         {
             MySqlConnection conn = null;
@@ -37,12 +37,12 @@ namespace Servidor
         }
 
         /// <summary>
-        /// 
+        /// Regista um utilizador na base de dados
         /// </summary>
-        /// <param name="username"></param>
-        /// <param name="password"></param>
-        /// <param name="ImageB64"></param>
-        /// <returns></returns>
+        /// <param name="username">Username a registar</param>
+        /// <param name="password">Password a registar</param>
+        /// <param name="ImageB64">Nullable: Imagem do utilizador em base64</param>
+        /// <returns>True se foi possível registar, caso contrário false</returns>
         internal static bool RegisterUser(string username, string password, string ImageB64)
         {
             MySqlCommand cmd = null;
@@ -54,7 +54,15 @@ namespace Servidor
 
                 // TODO: Processar Password
 
-                cmd.CommandText = String.Format("INSERT INTO utilizadores Username, Password, ImagemB64 VALUES '{0}', '{1}', '{2}';", username, password, ImageB64);
+                if(ImageB64 == null)
+                {
+                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password) VALUES ('{0}', '{1}');", username, password);
+                }
+                else
+                {
+                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, ImagemB64) VALUES ('{0}', '{1}', '{2}');", username, password, ImageB64);
+                }
+
 
                 if(cmd.ExecuteNonQuery() == 1)
                 {
@@ -83,13 +91,15 @@ namespace Servidor
         }
 
         /// <summary>
-        /// 
+        /// Verficia as credenciais de um utilizador e, caso estejam corretas,
+        /// devolve um objeto com a sua informação por referência no parametro
+        /// <paramref name="client"/>. 
         /// </summary>
-        /// <param name="username"></param>
-        /// <param name="password"></param>
-        /// <param name="client"></param>
-        /// <param name="error"></param>
-        /// <returns></returns>
+        /// <param name="username">Username do utilizador a iniciar sessão</param>
+        /// <param name="password">Password do utilizador a iniciar sessão</param>
+        /// <param name="client">Objeto do tipo <see cref="ClientInfo"/> onde são passados os dados do utilizador por referência</param>
+        /// <param name="error">String passada por referência com o erro</param>
+        /// <returns>True caso os dados estejam corretos, caso contrário false</returns>
         internal static bool LogUserIn(string username, string password, out ClientInfo client, out string error)
         {
             MySqlCommand cmd = null;
@@ -129,7 +139,8 @@ namespace Servidor
             {
                 error = ex.Message;
                 Logger.Log("Ocorreu um erro ao tentar autenticar o utilizador \"" + username + "\": " + ex.Message);
-                Logger.LogQuietly(ex.InnerException.StackTrace);
+                if(ex.InnerException != null)
+                    Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
@@ -140,10 +151,10 @@ namespace Servidor
         }
 
         /// <summary>
-        /// 
+        /// Guarda uma mensagem de utilizador na base de dados
         /// </summary>
-        /// <param name="userID"></param>
-        /// <param name="message"></param>
+        /// <param name="userID">O ID do utilizador que enviou a mensagem</param>
+        /// <param name="message">O texto da mensagem</param>
         internal static void SaveUserMessage(uint userID, string message)
         {
             MySqlCommand cmd = null;
@@ -178,7 +189,11 @@ namespace Servidor
             }
         }
     
-
+        /// <summary>
+        /// Obtém uma lista com as últimas 3 mensagens enviadas por um utilizador
+        /// </summary>
+        /// <param name="userID">ID do utilizador</param>
+        /// <returns>Lista com <see cref="UserMessageHistoryItem_Packet"/></returns>
         internal static List<UserMessageHistoryItem_Packet> GetMessageHistory(uint userID)
         {
             Database db = new Database();
@@ -189,7 +204,7 @@ namespace Servidor
                 cmd = new MySqlCommand();
                 cmd.Connection = db.ConnectToDatabase();
 
-                cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=" + userID + " LIMIT 3;";
+                cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=" + userID + " ORDER BY ID DESC LIMIT 3;";
                 MySqlDataReader reader = cmd.ExecuteReader();
 
                 if(reader.HasRows) // Verificar se existem mensagens em registo
@@ -214,8 +229,7 @@ namespace Servidor
             }
             catch(Exception ex)
             {
-                UserManagement userManagement = new UserManagement();
-                Logger.Log("Não foi possível obter o histórico de mensagens do utilizador \"" + userManagement.GetUsername(userID) + "\" (" + userID + "): " + ex.Message);
+                Logger.Log("Não foi possível obter o histórico de mensagens do utilizador \"" + UserManagement.GetUsername(userID) + "\" (" + userID + "): " + ex.Message);
                 Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally

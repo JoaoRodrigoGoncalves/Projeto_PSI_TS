@@ -48,7 +48,14 @@ namespace Servidor
         /// <param name="message">Dados a serem registados.</param>
         internal static void LogQuietly(string message)
         {
-            File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+            try
+            {
+                File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+            }
+            catch(Exception ex)
+            {
+                Log("Erro ao tentar fazer Log interno: " + ex.Message);
+            }
         }
 
         /// <summary>

@@ -29,7 +29,6 @@ namespace Servidor
         {
             NetworkStream networkStream = this.client.GetStream();
             ProtocolSI protocolSI = new ProtocolSI();
-            UserManagement userManagement = new UserManagement();
 
             while (protocolSI.GetCmdType() != ProtocolSICmdType.EOT)
             {
@@ -65,7 +64,7 @@ namespace Servidor
                                     dados.Contents = mensagem;
 
 
-                                    Logger.Log(String.Format("<{0}> {1}", userManagement.GetUsername(mensagem.userID), mensagem.message));
+                                    Logger.Log(String.Format("<{0}> {1}", UserManagement.GetUsername(mensagem.userID), mensagem.message));
                                     Database.SaveUserMessage(mensagem.userID, mensagem.message);
 
                                     // Broadcast para todos os utilizadores, excepto o que enviou a mensagem
@@ -88,7 +87,7 @@ namespace Servidor
 
                                 List<UserListItem_Packet> user_list = new List<UserListItem_Packet>();
 
-                                foreach (UserInfo user in userManagement.users)
+                                foreach (UserInfo user in UserManagement.users)
                                 {
                                     UserListItem_Packet this_user = new UserListItem_Packet();
                                     this_user.userID = user.userID;
@@ -108,7 +107,7 @@ namespace Servidor
 
                                 if(dados.Contents != null)
                                 {
-                                    if(userManagement.GetUser((uint)dados.Contents) != null)
+                                    if(UserManagement.GetUser((uint)dados.Contents) != null)
                                     {
                                         List<UserMessageHistoryItem_Packet> messageHistory = Database.GetMessageHistory((uint)dados.Contents);
 
@@ -159,7 +158,7 @@ namespace Servidor
                                             Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
 
                                             // Adicionar à lista de utilizadores
-                                            userManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
+                                            UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
 
                                             // Preencher dados de resposta
                                             auth.success = true;
@@ -167,7 +166,7 @@ namespace Servidor
                                             auth.userImage = dados_cliente.imageB64;
                                             auth.message = null;
 
-                                            if (userManagement.users.Count > 1)
+                                            if (UserManagement.users.Count > 1)
                                             {
                                                 // Se existirem utilizadores ativos, avisa-los que alguém se juntou
                                                 Basic_Packet user_join = new Basic_Packet();
@@ -285,8 +284,8 @@ namespace Servidor
                         networkStream.Write(ack, 0, ack.Length);
                         if (userID != null)
                         {
-                            Logger.Log(String.Format("Cliente {0} ({1}) desligado.", userManagement.GetUsername((uint)userID), userID));
-                            userManagement.RemoveUser((uint)userID);
+                            Logger.Log(String.Format("Cliente {0} ({1}) desligado.", UserManagement.GetUsername((uint)userID), userID));
+                            UserManagement.RemoveUser((uint)userID);
 
                             Basic_Packet saida_utilizador = new Basic_Packet();
                             saida_utilizador.Type = PacketType.USER_LEFT;

@@ -13,7 +13,6 @@ namespace Servidor
         /// <param name="excludedUser">ID do utilizador a excluir do broadcast</param>
         public static void BroadcastMessage(string message, uint? excludedUser = null)
         {
-            UserManagement management = new UserManagement();
             ProtocolSI SI = new ProtocolSI();
 
             byte[] data = SI.Make(ProtocolSICmdType.DATA, message);
@@ -21,7 +20,7 @@ namespace Servidor
             if(excludedUser.HasValue) // Verificar se há um utilizador a ser excluído
             {
                 Logger.LogQuietly(String.Format("Broadcast excluíndo {0}", excludedUser));
-                foreach (UserInfo user in management.users)
+                foreach (UserInfo user in UserManagement.users)
                 {
                     if (excludedUser.Value == user.userID)
                         continue; // Passa o utilizador excluído à frente
@@ -32,7 +31,7 @@ namespace Servidor
             else
             {
                 Logger.LogQuietly("Broadcast total");
-                foreach (UserInfo user in management.users)
+                foreach (UserInfo user in UserManagement.users)
                 {
                     user.userStream.Write(data, 0, data.Length);
                 }
