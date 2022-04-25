@@ -235,9 +235,9 @@ namespace Servidor
                                     }
                                     else
                                     {
-                                        if (register_request.username.Length < 15)
+                                        if (register_request.username.Length <= 15)
                                         {
-                                            if (register_request.password.Length > 8)
+                                            if (register_request.password.Length >= 8)
                                             {
                                                 if(Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
                                                 {

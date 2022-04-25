@@ -6,8 +6,8 @@
         xmlns:local="clr-namespace:Cliente"
         mc:Ignorable="d"
         Title="Registar"
-        Height="320"
-        Width="400"
+        Height="450"
+        Width="450"
         ResizeMode="CanMinimize"
         WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -76,6 +76,35 @@
 
             <!-- Campos -->
             <StackPanel Margin="10 20">
+                
+                <!-- Campo para a Imagem do User -->
+                <StackPanel>
+                    <Border Width="100" Height="100" CornerRadius="80" BorderThickness="1" BorderBrush="Gray">
+                        <Border.Background>
+                            <ImageBrush x:Name="ImageBrush_UserImage" ImageSource="/Resources/userIcon.png"/>
+                        </Border.Background>
+                    </Border>
+
+                    <!-- Butão para Carregar Imagem -->
+                    <!-- Uma grid para centar o botão -->
+                    <Grid Margin="0 10 0 10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="2*"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="button_UserImage"
+                            Style="{DynamicResource RoundedButtonStyle}"
+                            Margin="15 0 15 0"
+                            FontSize="15"
+                            FontWeight="DemiBold"
+                            Grid.Column="1" Click="button_UserImage_Click"
+                            >
+                            Carregar
+                        </Button>
+                    </Grid>
+                </StackPanel>
 
                 <!-- Campo nome de utilizador-->
                 <TextBlock>Nome de Utilizador</TextBlock>
