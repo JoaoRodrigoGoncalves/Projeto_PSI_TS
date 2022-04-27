@@ -51,7 +51,7 @@ namespace Cliente
                 // Esperar e ler os dados enviados pelo servidor. Caso a autenticação
                 // tenha sido bem sucedida, guardar os dados do utilizador atual e mostrar janela de chat.
                 // Caso contrário indicar que os dados fornecidos estão incorretos
-
+                
                 // Ler resposta do tipo AUTH_RESPONSE
 
                 Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote

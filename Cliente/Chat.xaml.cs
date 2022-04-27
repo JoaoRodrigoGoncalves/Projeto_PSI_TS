@@ -1,7 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Net.Sockets;
 using System.Windows;
 using Core;
+using EI.SI;
+using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 
 namespace Cliente
 {
@@ -10,19 +16,40 @@ namespace Cliente
     /// </summary>
     public partial class Chat : Window
     {
+        ProtocolSI protocolSI = new ProtocolSI();
         public Chat()
         {
             InitializeComponent();
-
+            
             // Pedir lista de utilizadores ativos
 
             // Preencher elementos do UI
             textBlock_nomeUtilizador.Text = Session.username;
-            textBlock_listaUtilizadores.Text = null;
             // TODO: Ao longo do carregamento das informações do servidor, este campo deve ser alterado
+            Basic_Packet requestUserOn = new Basic_Packet();
+            requestUserOn.Type= PacketType.USER_LIST_REQUEST;
 
+            requestUserOn.Contents = null;
+
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(requestUserOn));
+            Session.networkStream.Write(dados, 0, dados.Length);
+
+            // Esperar e ler os dados enviados pelo servidor. Caso existam utilizadores online são mostrados na textBlock_listaUtilizadores
+            // Ler resposta do tipo USER_LIST_REQUEST
+            Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+            while (protocolSI.GetCmdType() != ProtocolSICmdType.DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
+            {
+                Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+            }
+             
+            Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
+            
+            List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
+            foreach(var users in packets)
+            {
+                textBlock_listaUtilizadores.Text +=users.username +" ";
+            }
             // Adição de notificação de entrada
-
             ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
             messagePanel.Children.Add(joinNotification);
         }
