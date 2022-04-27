@@ -173,7 +173,12 @@
                     <TextBlock
                         x:Name="textBlock_nomeUtilizador"
                         VerticalAlignment="Center"
-                        Margin="10 0 0 0">Utilizador 1</TextBlock>
+                        Margin="10 0 0 0" 
+                        MouseDown="textBlock_nomeUtilizador_MouseDown" 
+                        MouseEnter="textBlock_nomeUtilizador_MouseEnter" 
+                        MouseLeave="textBlock_nomeUtilizador_MouseLeave">
+                        Utilizador 1
+                    </TextBlock>
                 </StackPanel>
 
                 <Border BorderBrush="Black" BorderThickness="1" Grid.Column="1" Margin="5 5 0 5">

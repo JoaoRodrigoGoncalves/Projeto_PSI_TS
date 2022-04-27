@@ -74,15 +74,7 @@
             <Border.Background>
                 <ImageBrush ImageSource="/Resources/userIcon.png"/>
             </Border.Background>
-            <Border
-                x:Name="border_indicadorPresenca"
-                Width="15"
-                Height="15"
-                VerticalAlignment="Bottom"
-                Margin="15"
-                HorizontalAlignment="Right"
-                CornerRadius="15"
-                Background="LightGray"/>
+            <Border x:Name="border_indicadorPresenca" Width="15" Height="15" VerticalAlignment="Bottom" Margin="15" HorizontalAlignment="Right" CornerRadius="15" Background="LightGray"/>
         </Border>
 
         <TextBlock x:Name="textBlock_nomeUtilizador" Text="Nome do Utilizador" HorizontalAlignment="Center" Margin="0 10 0 0" Foreground="Black" FontSize="18" FontWeight="Bold"/>

@@ -50,6 +50,24 @@ namespace Cliente
             messagePanel.Children.Add(joinNotification);
         }
 
+        private void textBlock_nomeUtilizador_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            UserProfile userProfile = new UserProfile((uint) Session.userID);
+            userProfile.ShowDialog();
+        }
+
+        private void textBlock_nomeUtilizador_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            textBlock_nomeUtilizador.TextDecorations = TextDecorations.Underline;
+        }
+
+        private void textBlock_nomeUtilizador_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            TextDecorationCollection decorations = new TextDecorationCollection();
+            decorations.Clear();
+            textBlock_nomeUtilizador.TextDecorations = decorations;
+        }
+
         private void adicionarMensagemCliente(string mensagem)
         {
             if (String.IsNullOrWhiteSpace(mensagem))

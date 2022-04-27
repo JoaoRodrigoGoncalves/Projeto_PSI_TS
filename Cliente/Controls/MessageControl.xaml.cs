@@ -30,7 +30,7 @@ namespace Cliente
         {
             if(!this.profileLocked)
             {
-                UserProfile profile = new UserProfile(textBlock_nomeUtilizador.Text);
+                UserProfile profile = new UserProfile((uint)Session.userID);
                 profile.ShowDialog();
             }
         }

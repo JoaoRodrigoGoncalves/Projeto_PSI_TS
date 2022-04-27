@@ -308,7 +308,8 @@ namespace Servidor
                 catch (Exception ex) // Outras exceções
                 {
                     Logger.Log("Erro: " + ex.Message);
-                    Logger.LogQuietly(ex.InnerException.StackTrace);
+                    if (ex.InnerException != null)
+                        Logger.LogQuietly(ex.InnerException.StackTrace);
                     userDisconnectHandler();
                     break; // Saltar fora do while loop
                 }

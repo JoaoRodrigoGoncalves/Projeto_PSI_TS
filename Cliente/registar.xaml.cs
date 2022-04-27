@@ -64,9 +64,17 @@ namespace Cliente
 
                             if (resposta_registo.success)// Boolean: Se o registo foi feito com sucesso
                             {
-                                this.Hide();
-                                //Login janela_login = new Login();
-                                //janela_login.ShowDialog();
+                                //Janela de Mensagem de um registo bem sucedido 
+                                string messageBoxText = "O utilizador foi registado com sucesso!";
+                                string caption = "Registo";
+                                MessageBoxButton button = MessageBoxButton.OK;
+                                MessageBoxImage icon = MessageBoxImage.Information;
+                                MessageBoxResult result;
+
+                                result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+
+                                //Depois de carregar "OK", da janela de mensagem, a janela de registo é fechada 
+                                this.Close();
                             }
                             else
                             {
