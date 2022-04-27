@@ -79,6 +79,8 @@ namespace Cliente
                 networkStream.Write(close, 0, close.Length);
                 networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
                 networkStream.Close();
+                Session.Client.Close();
+                Session.Client = null;
             }
         }
     }

@@ -97,6 +97,7 @@
                 <!-- Campo nome de utilizador-->
                 <TextBlock>Nome de Utilizador</TextBlock>
                 <TextBox x:Name="textBox_nomeUtilizador" BorderBrush="Black" Padding="0 2"/>
+                
 
                 <!-- Campo Password-->
                 <TextBlock Margin="0 10 0 0">Palavra-Passe</TextBlock>

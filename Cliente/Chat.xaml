@@ -182,7 +182,8 @@
                         FontSize="15"
                         VerticalAlignment="Center"
                         Margin="5 0 5 0"
-                        TextTrimming="CharacterEllipsis">
+                        TextTrimming="CharacterEllipsis"
+ >
                         --- Utilizadores ---
                     </TextBlock>
                 </Border>
@@ -190,7 +191,7 @@
                     Style="{DynamicResource TerminarSessaoBtn}"
                     x:Name="button_terminarSessao"
                     Margin="10 5 0 5"
-                    Grid.Column="2">
+                    Grid.Column="2" Click="button_terminarSessao_Click">
                     Terminar Sessão
                 </Button>
             </Grid>
@@ -225,8 +226,6 @@
                         Margin="5 0 5 0">
                         Enviar
                     </Button>
-                    <!-- Botão temporário para gerar uma mensagem de outro cliente -->
-                    <Button x:Name="simularCliente" Click="simularCliente_Click" Grid.Column="2">Sim. Cliente</Button>
                 </Grid>
             </StackPanel>
 
