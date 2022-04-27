@@ -14,9 +14,10 @@ namespace Servidor
     {
         static string logPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\logs\";
         static string fileName = logPath + @"log - " + DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss") + ".txt";
+        private static bool DEBUG_MODE = false;
 
         /// <summary>
-        /// Cria o cabeçalho do log
+        /// Cria o cabeçalho do log e verifica se a flag DEBUG_MODE foi acionada
         /// </summary>
         internal static void StartLogger()
         {
@@ -30,6 +31,18 @@ namespace Servidor
                        "- Servidor: " + Properties.Settings.Default.listenAddress + ":"+ Properties.Settings.Default.port + Environment.NewLine +
                        "------------------------------------------";
             File.WriteAllText(fileName, text);
+
+            string[] agrs = Environment.GetCommandLineArgs();
+
+            foreach(string arg in agrs)
+            {
+                if(arg == "--debug")
+                {
+                    DEBUG_MODE = true;
+                    Log("DEBUG_MODE ligado");
+                }
+            }
+
         }
 
         /// <summary>
@@ -38,7 +51,7 @@ namespace Servidor
         /// <param name="message">Dados a serem registados.</param>
         internal static void Log(string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine("[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
             File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
         }
 
@@ -50,7 +63,14 @@ namespace Servidor
         {
             try
             {
-                File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+                if(DEBUG_MODE)
+                {
+                    Log("[DEBUG_MODE] " + message);
+                }
+                else
+                {
+                    File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+                }
             }
             catch(Exception ex)
             {
