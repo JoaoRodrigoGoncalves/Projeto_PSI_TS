@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Servidor
 {
@@ -21,17 +17,6 @@ namespace Servidor
         /// </summary>
         internal static void StartLogger()
         {
-            if(!Directory.Exists(logPath))
-            {
-                Directory.CreateDirectory(logPath);
-            }
-
-            var text = "------------------------------------------" + Environment.NewLine +
-                       "- Data: " + DateTime.Now.ToString("G") + Environment.NewLine +
-                       "- Servidor: " + Properties.Settings.Default.listenAddress + ":"+ Properties.Settings.Default.port + Environment.NewLine +
-                       "------------------------------------------";
-            File.WriteAllText(fileName, text);
-
             string[] agrs = Environment.GetCommandLineArgs();
 
             foreach(string arg in agrs)
@@ -43,6 +28,18 @@ namespace Servidor
                 }
             }
 
+            if(!Directory.Exists(logPath))
+            {
+                Directory.CreateDirectory(logPath);
+            }
+
+            var text = "------------------------------------------" + Environment.NewLine +
+                       "- Data: " + DateTime.Now.ToString("G") + Environment.NewLine +
+                       "- Servidor: " + Properties.Settings.Default.listenAddress + ":"+ Properties.Settings.Default.port + Environment.NewLine +
+                       "- Ficheiro Configurações: " + AppDomain.CurrentDomain.SetupInformation.ConfigurationFile + Environment.NewLine +
+                       "------------------------------------------";
+            Console.WriteLine(text);
+            File.WriteAllText(fileName, text);
         }
 
         /// <summary>

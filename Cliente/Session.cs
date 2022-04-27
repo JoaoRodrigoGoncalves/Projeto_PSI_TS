@@ -33,41 +33,31 @@ namespace Cliente
                 else
                 {
                     // Caso contrário, mostramos uma mensagem de erro e perguntamos se o utilizador pretende repor as configurações padrão
-                    if (MessageBox.Show("Endereço IP ou porto indicado no ficheiro de configurações inválido. Pretendes repor as configurações padrão?", "Endereço IP inválido", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
+                    if (MessageBox.Show("Endereço IP ou porto indicado no ficheiro de configurações inválido. Pretendes repor as configurações padrão e tentar novamente?", "Endereço IP inválido", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
                     {
-                        // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
-                        ResetAndRestart();
-                    }
-                    else
-                    {
-                        // Caso contrário, saímos com erro -3
-                        Environment.Exit(-3);
+                        // Caso responda que sim, redefinimos as configurações
+                        ResetSettings();
                     }
                 }
             }
             catch
             {
                 // Ocorreu um erro ao tentar ligar ao servidor. Perguntamos se pretende repor configurações padrão
-                if (MessageBox.Show("Ocorreu um erro ao tentar ligar ao servidor. Pretendes repor as configurações padrão?", "Erro ao tentar ligar ao servidor", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
+                if (MessageBox.Show("Ocorreu um erro ao tentar ligar ao servidor. Pretendes repor as configurações padrão e tentar novamente?", "Erro ao tentar ligar ao servidor", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.Yes)
                 {
-                    // Caso responda que sim, redefinimos as configurações e reiniciamos a aplicação
-                    ResetAndRestart();
-                }
-                else
-                {
-                    // Caso contrário, saímos com erro -2
-                    Environment.Exit(-2);
+                    // Caso responda que sim, redefinimos as configurações
+                    ResetSettings();
                 }
             }
         }
 
-        private static void ResetAndRestart()
+
+        private static void ResetSettings()
         {
-            Properties.Settings.Default.ipaddress = "127.0.0.1";
-            Properties.Settings.Default.port = 5000;
+            Properties.Settings.Default.Reset();
             Properties.Settings.Default.Save();
-            Process.Start(Application.ResourceAssembly.Location);
-            Environment.Exit(0);
+            MessageBox.Show("As configurações foram repostas para os valores padrão", "Configurações repostas", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            StartTCPSession(); // Pede para que a TCPSession seja aberta de forma a continuar o fluxo da aplicação
         }
 
         internal static void CloseTCPSession()

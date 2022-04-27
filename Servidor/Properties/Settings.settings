@@ -2,19 +2,19 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Servidor.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="port" Type="System.Int32" Scope="User">
+    <Setting Name="port" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">5000</Value>
     </Setting>
-    <Setting Name="listenAddress" Type="System.String" Scope="User">
+    <Setting Name="listenAddress" Type="System.String" Scope="Application">
       <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
-    <Setting Name="Database" Type="System.String" Scope="User">
+    <Setting Name="Database" Type="System.String" Scope="Application">
       <Value Profile="(Default)">ChatApp</Value>
     </Setting>
-    <Setting Name="DB_User" Type="System.String" Scope="User">
+    <Setting Name="DB_User" Type="System.String" Scope="Application">
       <Value Profile="(Default)">root</Value>
     </Setting>
-    <Setting Name="DB_Password" Type="System.String" Scope="User">
+    <Setting Name="DB_Password" Type="System.String" Scope="Application">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

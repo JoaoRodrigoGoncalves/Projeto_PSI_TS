@@ -63,10 +63,10 @@ namespace Cliente
                 Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
 
                 /**
-                 * Verificar se o tipo de pacote é um AUTH_RESPONSE.
-                 * Em principio, isto há de funcionar. Esperar pela implementação das mensagens
-                 * para ver se deixa de funcionar como deve de ser
-                 */
+                    * Verificar se o tipo de pacote é um AUTH_RESPONSE.
+                    * Em principio, isto há de funcionar. Esperar pela implementação das mensagens
+                    * para ver se deixa de funcionar como deve de ser
+                    */
                 if (pacote.Type == PacketType.AUTH_RESPONSE)
                 {
                     Auth_Response_Packet resposta_login = JsonConvert.DeserializeObject<Auth_Response_Packet>(pacote.Contents.ToString());

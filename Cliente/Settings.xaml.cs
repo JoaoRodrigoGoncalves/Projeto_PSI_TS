@@ -50,11 +50,8 @@ namespace Cliente
 
             if(changes)
             {
-                MessageBox.Show("É necessário reiniciar a aplicação para aplicar as alterações.", "Reinicio necessário", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 Properties.Settings.Default.Save();
-                Session.CloseTCPSession();
-                Process.Start(Application.ResourceAssembly.Location); // Inicia uma nova instancia da aplicação
-                Environment.Exit(0); // Termina esta instancia da aplicação
+                Close();
             }
         }
     }
