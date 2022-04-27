@@ -2,7 +2,6 @@
 using System.Net.Sockets;
 using System.Windows;
 using Core;
-using MySql.Data.MySqlClient;
 
 namespace Cliente
 {
