@@ -183,8 +183,7 @@
                         VerticalAlignment="Center"
                         Margin="5 0 5 0"
                         TextTrimming="CharacterEllipsis"
- Text=""
- />
+                        Text=""/>
                 </Border>
                 <Button
                     Style="{DynamicResource TerminarSessaoBtn}"
@@ -205,7 +204,6 @@
 
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="8*"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 

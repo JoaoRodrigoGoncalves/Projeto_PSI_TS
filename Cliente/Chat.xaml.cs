@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.Net.Sockets;
 using System.Windows;
 using Core;
 using EI.SI;
-using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 
 namespace Cliente
