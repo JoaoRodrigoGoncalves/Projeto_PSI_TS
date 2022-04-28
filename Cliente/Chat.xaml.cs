@@ -13,6 +13,8 @@ namespace Cliente
     public partial class Chat : Window
     {
         ProtocolSI protocolSI = new ProtocolSI();
+        private bool IsSignOut = false;
+
         public Chat()
         {
             InitializeComponent();
@@ -41,9 +43,10 @@ namespace Cliente
             Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
             
             List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
-            foreach(var users in packets)
+            foreach(var user in packets)
             {
-                textBlock_listaUtilizadores.Text +=users.username +" ";
+                UserManagement.AddUser(user.userID, user.username, null);
+                textBlock_listaUtilizadores.Text +=user.username +" ";
             }
             // Adição de notificação de entrada
             ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
@@ -52,7 +55,7 @@ namespace Cliente
 
         private void textBlock_nomeUtilizador_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            UserProfile userProfile = new UserProfile((uint) Session.userID);
+            UserProfile userProfile = new UserProfile((uint)Session.userID);
             userProfile.ShowDialog();
         }
 
@@ -77,12 +80,6 @@ namespace Cliente
             messagePanel.Children.Add(message);
         }
 
-        private void adicionarMensagemParticipante(string nomeParticipante, DateTime data, string mensagem)
-        {
-            //MessageControl message = new MessageControl("Outro", data, mensagem);
-            //messagePanel.Children.Add(message);
-        }
-
         private void button_enviarMensagem_Click(object sender, RoutedEventArgs e)
         {
             adicionarMensagemCliente(textBox_mensagem.Text);
@@ -102,8 +99,11 @@ namespace Cliente
 
         private void Window_Closed(object sender, EventArgs e)
         {
-            // Terminar processo
-            Application.Current.Shutdown();
+            if(!IsSignOut)
+            {
+                // Terminar processo
+                Application.Current.Shutdown();
+            }
         }
 
         private void button_terminarSessao_Click(object sender, RoutedEventArgs e)
@@ -111,10 +111,10 @@ namespace Cliente
             //Termina a sessão do cliente e mostra a janela de login
             if (Session.Client != null)
             {
-                this.Hide();
                 Session.CloseTCPSession();
-                Login loginjanela = new Login();
-                loginjanela.ShowDialog();
+                Session.loginReference.Show();
+                IsSignOut = true;
+                this.Close();
             } 
         }
     }

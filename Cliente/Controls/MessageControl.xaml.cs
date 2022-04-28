@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Core;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,14 +11,15 @@ namespace Cliente
     public partial class MessageControl : UserControl
     {
         private bool profileLocked = false;
+        private uint userID;
 
-
-        public MessageControl(string username, DateTime messageDateTime, string message, int? maxWidth = null, bool blockProfile = false)
+        public MessageControl(uint userID, DateTime messageDateTime, string message, int? maxWidth = null, bool blockProfile = false)
         {
             InitializeComponent();
-            this.textBlock_nomeUtilizador.Text = username;
+            this.textBlock_nomeUtilizador.Text = UserManagement.GetUsername(userID);
             this.textBlock_timestamp.Text = messageDateTime.ToString("G");
             this.textBlock_mensagem.Text = message;
+            this.userID = userID;
             
             /// Esta condição é necessária por causa da janela <see cref="UserProfile"/>, de forma a que o controlo caiba no stackpanel
             if(maxWidth.HasValue)
@@ -30,7 +32,7 @@ namespace Cliente
         {
             if(!this.profileLocked)
             {
-                UserProfile profile = new UserProfile((uint)Session.userID);
+                UserProfile profile = new UserProfile(userID);
                 profile.ShowDialog();
             }
         }

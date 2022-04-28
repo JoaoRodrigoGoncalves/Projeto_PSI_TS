@@ -239,5 +239,41 @@ namespace Servidor
             }
             return null;
         }
+
+        /// <summary>
+        /// Verifica se um utilizador existe com base no userID indicado
+        /// </summary>
+        /// <param name="userID">ID do utilizador a verificar</param>
+        /// <returns>True se existir, caso contrario false</returns>
+        internal static bool UserExists(uint userID)
+        {
+            Database db = new Database();
+            MySqlCommand cmd = null;
+
+            try
+            {
+                cmd = new MySqlCommand();
+                cmd.Connection = db.ConnectToDatabase();
+
+                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE ID=" + userID + ";";
+                MySqlDataReader reader = cmd.ExecuteReader();
+
+                bool exists = reader.HasRows;
+                reader.Close();
+                cmd.Connection.Close();
+                return exists;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Não foi possível procurar pelo utilizador (" + userID + "): " + ex.Message);
+                Logger.LogQuietly(ex.InnerException.StackTrace);
+            }
+            finally
+            {
+                if (cmd.Connection != null)
+                    cmd.Connection.Close();
+            }
+            return false;
+        }
     }
 }

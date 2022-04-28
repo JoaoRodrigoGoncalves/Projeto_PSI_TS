@@ -28,6 +28,7 @@ namespace Cliente
                 border_indicadorPresenca.Background = Brushes.LightGray;// Cor do Indicador de Estado, se estiver offline
             }
 
+            textBlock_nomeUtilizador.Text = user.username; // Mostrar o nome de utilizador
 
             Basic_Packet pedidoMensagem = new Basic_Packet();
             pedidoMensagem.Type = PacketType.MESSAGE_HISTORY_REQUEST;
@@ -50,7 +51,10 @@ namespace Cliente
                 {
                     TextBlock advertencia = new TextBlock();
                     advertencia.Text = "Não existem mensagens!";
-
+                    advertencia.HorizontalAlignment = HorizontalAlignment.Center;
+                    advertencia.VerticalAlignment = VerticalAlignment.Center;
+                    advertencia.FontSize = 12;
+                    advertencia.Foreground = Brushes.Black;
                     messagePanel.Children.Add(advertencia);
                 }
                 else
@@ -59,7 +63,7 @@ namespace Cliente
                 
                     foreach(UserMessageHistoryItem_Packet element in resposta_mensagem)
                     {
-                        MessageControl messageControl = new MessageControl(user.username, element.time, element.message, 260, true);
+                        MessageControl messageControl = new MessageControl(id, element.time, element.message, 260, true);
                         messagePanel.Children.Add(messageControl);
                     }
                 }

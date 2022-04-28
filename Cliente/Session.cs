@@ -14,14 +14,13 @@ namespace Cliente
         internal static uint? userID = null;
         internal static string username = null;
         internal static string userImageB64 = null;
+        internal static Login loginReference = null; // Utilizado para poder terminar sessão e poder regressar à janela de login inicial
 
         internal static void StartTCPSession()
         {
-            IPAddress address;
-            
             try
             {
-                if (IPAddress.TryParse(Properties.Settings.Default.ipaddress, out address) || (Properties.Settings.Default.port < 1000 || Properties.Settings.Default.port > 65535))
+                if (IPAddress.TryParse(Properties.Settings.Default.ipaddress, out IPAddress address) || (Properties.Settings.Default.port < 1000 || Properties.Settings.Default.port > 65535))
                 {
                     // Se o endereço IP/porto do ficheiro de configuração seja válido, iniciamos o endpoint
                     IPEndPoint endPoint = new IPEndPoint(address, Properties.Settings.Default.port);

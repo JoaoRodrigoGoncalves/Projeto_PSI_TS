@@ -114,16 +114,31 @@ namespace Servidor
 
                                     if(dados.Contents != null)
                                     {
-                                        if(UserManagement.GetUser((uint)dados.Contents) != null)
+                                        if (uint.TryParse(dados.Contents.ToString(), out uint requested_user_id))
                                         {
-                                            List<UserMessageHistoryItem_Packet> messageHistory = Database.GetMessageHistory((uint)dados.Contents);
+                                            if (Database.UserExists(requested_user_id))
+                                            {
+                                                List<UserMessageHistoryItem_Packet> messageHistory = Database.GetMessageHistory(requested_user_id);
 
-                                            Basic_Packet messageHistory_response_packet = new Basic_Packet();
-                                            messageHistory_response_packet.Type = PacketType.MESSAGE_HISTORY_RESPONSE;
-                                            messageHistory_response_packet.Contents = messageHistory;
+                                                Basic_Packet messageHistory_response_packet = new Basic_Packet();
+                                                messageHistory_response_packet.Type = PacketType.MESSAGE_HISTORY_RESPONSE;
+                                                if (messageHistory.Count > 0)
+                                                {
+                                                    messageHistory_response_packet.Contents = messageHistory;
+                                                }
+                                                else
+                                                {
+                                                    messageHistory_response_packet.Contents = null;
+                                                }
 
-                                            byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(messageHistory_response_packet));
-                                            networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
+                                                byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(messageHistory_response_packet));
+                                                networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
+                                            }
+                                            else
+                                            {
+                                                Logger.Log("Utilizador pedido não existe");
+                                                Logger.LogQuietly(protocolSI.GetStringFromData());
+                                            }
                                         }
                                         else
                                         {
@@ -155,11 +170,8 @@ namespace Servidor
                                             // Instanciar resposta
                                             Auth_Response_Packet auth = new Auth_Response_Packet();
 
-                                            Database.ClientInfo dados_cliente;
-                                            string errorMessage = null; // necessário para ir buscar a mensagem de erro à função de login
-
                                             // Se as credenciais estiverem corretas
-                                            if (Database.LogUserIn(auth_request.username, auth_request.password, out dados_cliente, out errorMessage))
+                                            if (Database.LogUserIn(auth_request.username, auth_request.password, out Database.ClientInfo dados_cliente, out string errorMessage))
                                             {
                                                 userID = dados_cliente.userID;
                                                 Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
@@ -302,14 +314,6 @@ namespace Servidor
                 {
                     Logger.Log(String.Format("Cliente {0} ({1}) perdeu ligação: Ligação fechada forçadamente", UserManagement.GetUsername((uint)userID), userID));
                     Logger.LogQuietly(ex.Message);
-                    userDisconnectHandler();
-                    break; // Saltar fora do while loop
-                }
-                catch (Exception ex) // Outras exceções
-                {
-                    Logger.Log("Erro: " + ex.Message);
-                    if (ex.InnerException != null)
-                        Logger.LogQuietly(ex.InnerException.StackTrace);
                     userDisconnectHandler();
                     break; // Saltar fora do while loop
                 }

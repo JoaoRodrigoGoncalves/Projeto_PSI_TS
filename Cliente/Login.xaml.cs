@@ -16,7 +16,9 @@ namespace Cliente
 
         public Login()
         {
+            Session.loginReference = this;
             InitializeComponent();
+            textBox_nomeUtilizador.Focus();
         }
 
         private void button_entrar_Click(object sender, RoutedEventArgs e)
@@ -75,10 +77,16 @@ namespace Cliente
                     {
                         //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
-                        this.Hide();
                         Session.userID = resposta_login.userID;
                         Session.username = textBox_nomeUtilizador.Text;
                         Session.userImageB64 = resposta_login.userImage;
+
+                        // Limpeza de caixas de texto para caso o utilizador termine sessão
+                        textBox_nomeUtilizador.Clear();
+                        textBox_palavraPasse.Clear();
+                        textBox_nomeUtilizador.Focus();
+
+                        this.Hide();
                         Chat janela_chat = new Chat();
                         janela_chat.ShowDialog();
                     }
