@@ -173,32 +173,45 @@ namespace Servidor
                                             // Se as credenciais estiverem corretas
                                             if (Database.LogUserIn(auth_request.username, auth_request.password, out Database.ClientInfo dados_cliente, out string errorMessage))
                                             {
-                                                userID = dados_cliente.userID;
-                                                Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
 
-                                                // Adicionar à lista de utilizadores
-                                                UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
-
-                                                // Preencher dados de resposta
-                                                auth.success = true;
-                                                auth.userID = userID;
-                                                auth.userImage = dados_cliente.imageB64;
-                                                auth.message = null;
-
-                                                if (UserManagement.users.Count > 1)
+                                                if(UserManagement.GetUser((uint)dados_cliente.userID) == null)
                                                 {
-                                                    // Se existirem utilizadores ativos, avisa-los que alguém se juntou
-                                                    Basic_Packet user_join = new Basic_Packet();
-                                                    user_join.Type = PacketType.USER_JOINED;
+                                                    userID = dados_cliente.userID; // Só podemos dar userID à sessão depois de establecer que não é uma dupla ligação
+                                                    Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
 
-                                                    UserJoined_Packet join = new UserJoined_Packet();
-                                                    join.userID = dados_cliente.userID;
-                                                    join.username = dados_cliente.username;
-                                                    join.userImage = dados_cliente.imageB64;
-                                                    user_join.Contents = join;
+                                                    // Adicionar à lista de utilizadores
+                                                    UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
 
-                                                    // Emitr mensagem para todos os utilizadores, excepto o atual
-                                                    MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                                    // Preencher dados de resposta
+                                                    auth.success = true;
+                                                    auth.userID = userID;
+                                                    auth.userImage = dados_cliente.imageB64;
+                                                    auth.message = null;
+
+                                                    if (UserManagement.users.Count > 1)
+                                                    {
+                                                        // Se existirem utilizadores ativos, avisa-los que alguém se juntou
+                                                        Basic_Packet user_join = new Basic_Packet();
+                                                        user_join.Type = PacketType.USER_JOINED;
+
+                                                        UserJoined_Packet join = new UserJoined_Packet();
+                                                        join.userID = dados_cliente.userID;
+                                                        join.username = dados_cliente.username;
+                                                        join.userImage = dados_cliente.imageB64;
+                                                        user_join.Contents = join;
+
+                                                        // Emitr mensagem para todos os utilizadores, excepto o atual
+                                                        MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    Logger.Log(String.Format("Tentativa de dupla sessão para o utilizador {0} em {1}", userID, Logger.GetSocket(this.client)));
+
+                                                    auth.success = false;
+                                                    auth.userID = null;
+                                                    auth.userImage = null;
+                                                    auth.message = "Dupla sessão não permitida.";
                                                 }
                                             }
                                             else
@@ -316,6 +329,25 @@ namespace Servidor
                     Logger.LogQuietly(ex.Message);
                     userDisconnectHandler();
                     break; // Saltar fora do while loop
+                }
+                catch(Exception ex)
+                {
+                    Logger.Log(String.Format("Ocorreu um erro inesperado com a ligação ao utilizador {0}: {1}", userID, ex.Message));
+                    try
+                    {
+                        // Enviar EOT para o utilizador
+                        byte[] force_close = protocolSI.Make(ProtocolSICmdType.EOT);
+                        networkStream.Write(force_close, 0, force_close.Length);
+                        networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Esta linha pode ou não ter de sair daqui
+                    }
+                    catch(Exception new_ex)
+                    {
+                        Logger.Log("Não foi possível enviar um EOT para o utilizador: " + new_ex.Message);
+                    }
+                    finally
+                    {
+                        userDisconnectHandler();
+                    }
                 }
             }
             networkStream.Close();
