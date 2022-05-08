@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using Core;
+﻿using Core;
 using EI.SI;
 using Newtonsoft.Json;
-using System.Windows.Media;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Cliente
 {
@@ -60,8 +59,8 @@ namespace Cliente
                 else
                 {
                     List<UserMessageHistoryItem_Packet> resposta_mensagem = JsonConvert.DeserializeObject<List<UserMessageHistoryItem_Packet>>(pacote.Contents.ToString());
-                
-                    foreach(UserMessageHistoryItem_Packet element in resposta_mensagem)
+
+                    foreach (UserMessageHistoryItem_Packet element in resposta_mensagem)
                     {
                         MessageControl messageControl = new MessageControl(id, element.time, element.message, 260, true);
                         messagePanel.Children.Add(messageControl);

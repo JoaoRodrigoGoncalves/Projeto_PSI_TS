@@ -82,6 +82,7 @@
     <Compile Include="UserProfile.xaml.cs">
       <DependentUpon>UserProfile.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utilities.cs" />
     <Page Include="Chat.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -177,6 +178,13 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\userIcon.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\userIcon1.png" />
+    <Resource Include="Resources\userIcon2.png" />
+    <Resource Include="Resources\userIcon3.png" />
+    <Resource Include="Resources\userIcon4.png" />
+    <Resource Include="Resources\userIcon5.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

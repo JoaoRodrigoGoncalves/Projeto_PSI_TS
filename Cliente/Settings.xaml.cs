@@ -1,17 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace Cliente
 {
@@ -36,19 +23,19 @@ namespace Cliente
         {
             bool changes = false;
 
-            if(TB_IP.Text != Properties.Settings.Default.ipaddress)
+            if (TB_IP.Text != Properties.Settings.Default.ipaddress)
             {
                 Properties.Settings.Default.ipaddress = TB_IP.Text;
                 changes = true;
             }
 
-            if(TB_Port.Text != Properties.Settings.Default.port.ToString())
+            if (TB_Port.Text != Properties.Settings.Default.port.ToString())
             {
                 Properties.Settings.Default.port = int.Parse(TB_Port.Text);
                 changes = true;
             }
 
-            if(changes)
+            if (changes)
             {
                 Properties.Settings.Default.Save();
                 Close();

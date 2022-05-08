@@ -1,6 +1,4 @@
 ﻿using EI.SI;
-using System;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Windows;
@@ -13,7 +11,7 @@ namespace Cliente
         internal static NetworkStream networkStream { get; private set; }
         internal static uint? userID = null;
         internal static string username = null;
-        internal static string userImageB64 = null;
+        internal static uint? userImage = null;
         internal static Login loginReference = null; // Utilizado para poder terminar sessão e poder regressar à janela de login inicial
 
         internal static void StartTCPSession()
@@ -61,7 +59,7 @@ namespace Cliente
 
         internal static void CloseTCPSession()
         {
-            if(Session.Client != null)
+            if (Session.Client != null)
             {
                 ProtocolSI protocolSI = new ProtocolSI();
                 byte[] close = protocolSI.Make(ProtocolSICmdType.EOT);

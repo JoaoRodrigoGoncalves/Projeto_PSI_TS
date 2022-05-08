@@ -6,10 +6,10 @@
              xmlns:local="clr-namespace:Cliente"
              mc:Ignorable="d"
              d:DesignWidth="600">
-    <StackPanel HorizontalAlignment="Left">
+    <StackPanel Orientation="Vertical" HorizontalAlignment="Left">
         <TextBlock 
                 x:Name="textBlock_nomeUtilizador"
-                Padding="10 5 10 0"
+                Padding="40 5 10 0"
                 FontWeight="Bold"
                 FontSize="15"
                 VerticalAlignment="Center"
@@ -17,27 +17,32 @@
                 MouseUp="textBlock_nomeUtilizador_MouseUp"
                 MouseEnter="textBlock_nomeUtilizador_MouseEnter"
                 MouseLeave="textBlock_nomeUtilizador_MouseLeave"/>
-
-        <Border
-            x:Name="BallonBorder"
-            CornerRadius="10"
-            Background="#00FF55"
-            MaxWidth="400"
-            MinWidth="100"
-            Margin="10 0 10 0"
-            >
+        <StackPanel Orientation="Horizontal">
+            <Image
+                x:Name="image_ImagemUtilizador"
+                Source="/Resources/userIcon.png"
+                Margin="5 0 0 0"
+                Height="30"/>
+            <Border
+                x:Name="BallonBorder"
+                CornerRadius="10"
+                Background="#00FF55"
+                MaxWidth="400"
+                MinWidth="100"
+                Margin="5 0 10 0"
+                >
+                <TextBlock
+                    x:Name="textBlock_mensagem"
+                    TextWrapping="Wrap"
+                    Padding="10 5 10 5 "
+                    Text="..."/>
+            </Border>
+        </StackPanel>
             <TextBlock
-                x:Name="textBlock_mensagem"
-                TextWrapping="Wrap"
-                Padding="10 5 10 5 "
-                Margin="10 0 10 0"
-                Text="..."/>
-        </Border>
-        <TextBlock
-            x:Name="textBlock_timestamp"
-            FontSize="10"
-            HorizontalAlignment="Right"
-            Margin="0 0 10 0"
-            Text="00/00/0000 00:00:00"/>
+                x:Name="textBlock_timestamp"
+                FontSize="10"
+                HorizontalAlignment="Right"
+                Margin="0 0 10 0"
+                Text="00/00/0000 00:00:00"/>
     </StackPanel>
 </UserControl>

@@ -16,13 +16,16 @@ namespace Cliente
         public MessageControl(uint userID, DateTime messageDateTime, string message, int? maxWidth = null, bool blockProfile = false)
         {
             InitializeComponent();
-            this.textBlock_nomeUtilizador.Text = UserManagement.GetUsername(userID);
+            UserInfo currentUser = UserManagement.GetUser(userID);
+
+            this.textBlock_nomeUtilizador.Text = currentUser.username;
+            this.image_ImagemUtilizador.Source = Utilities.getImage(currentUser.userImage);
             this.textBlock_timestamp.Text = messageDateTime.ToString("G");
             this.textBlock_mensagem.Text = message;
             this.userID = userID;
-            
+
             /// Esta condição é necessária por causa da janela <see cref="UserProfile"/>, de forma a que o controlo caiba no stackpanel
-            if(maxWidth.HasValue)
+            if (maxWidth.HasValue)
                 this.BallonBorder.MaxWidth = Convert.ToDouble(maxWidth);
 
             profileLocked = blockProfile;
@@ -30,7 +33,7 @@ namespace Cliente
 
         private void textBlock_nomeUtilizador_MouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            if(!this.profileLocked)
+            if (!this.profileLocked)
             {
                 UserProfile profile = new UserProfile(userID);
                 profile.ShowDialog();

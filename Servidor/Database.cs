@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using Core;
+﻿using Core;
 using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
 
 namespace Servidor
 {
@@ -11,7 +11,7 @@ namespace Servidor
         {
             public uint userID;
             public string username;
-            public string imageB64 = null;
+            public uint? userImage = null;
         }
 
         /// <summary>
@@ -41,9 +41,9 @@ namespace Servidor
         /// </summary>
         /// <param name="username">Username a registar</param>
         /// <param name="password">Password a registar</param>
-        /// <param name="ImageB64">Nullable: Imagem do utilizador em base64</param>
+        /// <param name="userImage">Nullable: Imagem selecionada pelo utilizador</param>
         /// <returns>True se foi possível registar, caso contrário false</returns>
-        internal static bool RegisterUser(string username, string password, string ImageB64)
+        internal static bool RegisterUser(string username, string password, uint? userImage)
         {
             MySqlCommand cmd = null;
             try
@@ -54,17 +54,17 @@ namespace Servidor
 
                 // TODO: Processar Password
 
-                if(ImageB64 == null)
+                if (userImage == null)
                 {
                     cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password) VALUES ('{0}', '{1}');", username, password);
                 }
                 else
                 {
-                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, ImagemB64) VALUES ('{0}', '{1}', '{2}');", username, password, ImageB64);
+                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, ImagemB64) VALUES ('{0}', '{1}', '{2}');", username, password, userImage);
                 }
 
 
-                if(cmd.ExecuteNonQuery() == 1)
+                if (cmd.ExecuteNonQuery() == 1)
                 {
                     // Uma linha foi modificada, o que sigifica que o utilizador foi adicionado.
                     cmd.Connection.Close();
@@ -77,14 +77,14 @@ namespace Servidor
                     Logger.LogQuietly("Query:" + cmd.CommandText);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logger.Log("Ocorreu um erro ao registar o utilizador: " + ex.Message);
                 Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
-                if(cmd.Connection != null)
+                if (cmd.Connection != null)
                     cmd.Connection.Close();
             }
             return false;
@@ -111,19 +111,26 @@ namespace Servidor
                 cmd = new MySqlCommand();
                 Database db = new Database();
                 cmd.Connection = db.ConnectToDatabase();
-                
+
                 // TODO: Processar password
 
-                cmd.CommandText = "SELECT ID, ImagemB64 FROM Utilizadores WHERE Username=\"" + username + "\" AND Password=\"" + password + "\" LIMIT 1;";
+                cmd.CommandText = "SELECT ID, userImage FROM Utilizadores WHERE Username=\"" + username + "\" AND Password=\"" + password + "\" LIMIT 1;";
                 MySqlDataReader data = cmd.ExecuteReader();
 
-                if(data.HasRows) // Se existe um registo
+                if (data.HasRows) // Se existe um registo
                 {
-                    if(data.Read())
+                    if (data.Read())
                     {
                         client.userID = (uint)data["ID"];
                         client.username = username;
-                        client.imageB64 = data["ImagemB64"].ToString();
+                        if (String.IsNullOrWhiteSpace(data["userImage"].ToString()))
+                        {
+                            client.userImage = null;
+                        }
+                        else
+                        {
+                            client.userImage = Convert.ToUInt32(data["userImage"]);
+                        }
                         data.Close();
                         cmd.Connection.Close();
                         return true;
@@ -135,16 +142,16 @@ namespace Servidor
                     error = "Credenciais incorretas.";
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 error = ex.Message;
                 Logger.Log("Ocorreu um erro ao tentar autenticar o utilizador \"" + username + "\": " + ex.Message);
-                if(ex.InnerException != null)
+                if (ex.InnerException != null)
                     Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
-                if(cmd.Connection != null)
+                if (cmd.Connection != null)
                     cmd.Connection.Close();
             }
             return false;
@@ -166,9 +173,9 @@ namespace Servidor
                 cmd.Connection = db.ConnectToDatabase();
 
                 cmd.CommandText = "INSERT INTO Mensagens (Texto, IDUtilizador) VALUES ('" + message + "', '" + userID + "')";
-                
-                
-                if(cmd.ExecuteNonQuery() == 1)
+
+
+                if (cmd.ExecuteNonQuery() == 1)
                 {
                     return;
                 }
@@ -184,11 +191,11 @@ namespace Servidor
             }
             finally
             {
-                if(cmd.Connection != null)
+                if (cmd.Connection != null)
                     cmd.Connection.Close();
             }
         }
-    
+
         /// <summary>
         /// Obtém uma lista com as últimas 3 mensagens enviadas por um utilizador
         /// </summary>
@@ -207,10 +214,10 @@ namespace Servidor
                 cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=" + userID + " ORDER BY ID DESC LIMIT 3;";
                 MySqlDataReader reader = cmd.ExecuteReader();
 
-                if(reader.HasRows) // Verificar se existem mensagens em registo
+                if (reader.HasRows) // Verificar se existem mensagens em registo
                 {
                     List<UserMessageHistoryItem_Packet> mensagem = new List<UserMessageHistoryItem_Packet>();
-                    while(reader.Read())
+                    while (reader.Read())
                     {
                         // Adicionar todas as mensagens 
                         UserMessageHistoryItem_Packet m = new UserMessageHistoryItem_Packet();
@@ -227,7 +234,7 @@ namespace Servidor
                     return new List<UserMessageHistoryItem_Packet>();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logger.Log("Não foi possível obter o histórico de mensagens do utilizador \"" + UserManagement.GetUsername(userID) + "\" (" + userID + "): " + ex.Message);
                 Logger.LogQuietly(ex.InnerException.StackTrace);

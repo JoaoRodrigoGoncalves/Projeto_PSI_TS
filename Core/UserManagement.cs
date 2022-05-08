@@ -10,18 +10,18 @@ namespace Core
         /// <summary>
         /// [CLIENT-SIDE] Adiciona um utilizador à lista de utilizadores
         /// </summary>
-        public static void AddUser(uint userID, string username, string userImageB64)
+        public static void AddUser(uint userID, string username, uint? userImage)
         {
-            UserInfo newUser = new UserInfo(userID, username, userImageB64);
+            UserInfo newUser = new UserInfo(userID, username, userImage);
             users.Add(newUser);
         }
 
         /// <summary>
         /// [SERVER-SIDE] Adiciona um utilizador à lista de utilizadores
         /// </summary>
-        public static void AddUser(uint userID, string username, string userImageB64, NetworkStream userStream)
+        public static void AddUser(uint userID, string username, uint? userImage, NetworkStream userStream)
         {
-            UserInfo newUser = new UserInfo(userID, username, userImageB64, userStream);
+            UserInfo newUser = new UserInfo(userID, username, userImage, userStream);
             users.Add(newUser);
         }
 
@@ -59,28 +59,28 @@ namespace Core
     {
         public uint userID { get; }
         public string username { get; }
-        public string userImage { get; }
+        public uint? userImage { get; }
         public NetworkStream userStream { get; }
 
         /// <summary>
         /// [CLIENT-SIDE] Cria um objeto de utilizador
         /// </summary>
-        public UserInfo(uint userID, string username, string userImageB64)
+        public UserInfo(uint userID, string username, uint? userImage)
         {
             this.userID = userID;
             this.username = username;
-            this.userImage = userImageB64;
+            this.userImage = userImage;
             this.userStream = null; // Client-side não guarda streams. Definido como null aqui para impedir possíveis erros
         }
 
         /// <summary>
         /// [SERVER-SIDE] Cria um objeto de utilizador
         /// </summary>
-        public UserInfo(uint userID, string username, string userImageB64, NetworkStream stream)
+        public UserInfo(uint userID, string username, uint? userImage, NetworkStream stream)
         {
             this.userID = userID;
             this.username = username;
-            this.userImage = userImageB64;
+            this.userImage = userImage;
             this.userStream = stream;
         }
     }

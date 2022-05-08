@@ -17,7 +17,7 @@ namespace Servidor
 
             byte[] data = SI.Make(ProtocolSICmdType.DATA, message);
 
-            if(excludedUser.HasValue) // Verificar se há um utilizador a ser excluído
+            if (excludedUser.HasValue) // Verificar se há um utilizador a ser excluído
             {
                 Logger.LogQuietly(String.Format("Broadcast excluíndo {0}", excludedUser));
                 foreach (UserInfo user in UserManagement.users)

@@ -41,7 +41,7 @@ namespace Core
     {
         public uint userID { get; set; }
         public string username { get; set; }
-        public string userImage { get; set; }
+        public uint? userImage { get; set; }
 
     }
 
@@ -55,6 +55,7 @@ namespace Core
     {
         public uint userID { get; set; }
         public string username { get; set; }
+        public uint? userImage { get; set; }
     }
 
     public class UserMessageHistoryItem_Packet
@@ -68,7 +69,7 @@ namespace Core
         public bool success { get; set; }
         public string message { get; set; }
         public uint? userID { get; set; }
-        public string userImage { get; set; }
+        public uint? userImage { get; set; }
     }
 
     public class Auth_Request_Packet
@@ -87,6 +88,6 @@ namespace Core
     {
         public string username { get; set; }
         public string password { get; set; }
-        public string userImage { get; set; }
+        public uint? userImage { get; set; }
     }
 }

@@ -16,10 +16,10 @@ namespace Servidor
 
             IPEndPoint endpoint = null;
 
-            if(Properties.Settings.Default.listenAddress != DEFAULT_ADDRESS.ToString() || Properties.Settings.Default.port != DEFAULT_PORT)
+            if (Properties.Settings.Default.listenAddress != DEFAULT_ADDRESS.ToString() || Properties.Settings.Default.port != DEFAULT_PORT)
             {
                 IPAddress address;
-                if(IPAddress.TryParse(Properties.Settings.Default.listenAddress, out address))
+                if (IPAddress.TryParse(Properties.Settings.Default.listenAddress, out address))
                 {
                     endpoint = new IPEndPoint(address, Properties.Settings.Default.port);
                 }

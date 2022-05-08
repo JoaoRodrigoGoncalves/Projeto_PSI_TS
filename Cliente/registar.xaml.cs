@@ -1,11 +1,9 @@
-﻿using System;
+﻿using Core;
 using EI.SI;
+using Newtonsoft.Json;
+using System;
 using System.Windows;
 using System.Windows.Media;
-using Core;
-using Newtonsoft.Json;
-using Microsoft.Win32;
-using System.Windows.Media.Imaging;
 
 namespace Cliente
 {
@@ -15,7 +13,7 @@ namespace Cliente
     public partial class Registar : Window
     {
         ProtocolSI protocolSI = new ProtocolSI();
-        private static string imageBase64 = null;
+        //private static string imageBase64 = null;
 
         public Registar()
         {
@@ -31,8 +29,9 @@ namespace Cliente
             {
                 if (!String.IsNullOrWhiteSpace(textBox_palavraPasse.Password))
                 {
-                    if (textBox_palavraPasse.Password == textBox_verificarPalavraPasse.Password) {
-                    
+                    if (textBox_palavraPasse.Password == textBox_verificarPalavraPasse.Password)
+                    {
+
                         //Envia os dados do utilizador(username e password) para o servidor 
                         Basic_Packet pedidoRegisto = new Basic_Packet();
                         pedidoRegisto.Type = PacketType.REGISTER_REQUEST;//Indicar que o pacote é um pedido de registo
@@ -41,7 +40,7 @@ namespace Cliente
                         registo.username = textBox_nomeUtilizador.Text;
                         registo.password = textBox_palavraPasse.Password;
                         registo.password = textBox_verificarPalavraPasse.Password;
-                        registo.userImage = imageBase64;
+                        //registo.userImage = imageBase64;
 
                         pedidoRegisto.Contents = registo;
 
@@ -102,19 +101,19 @@ namespace Cliente
 
         private void button_UserImage_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "Image files (*.png;*.jpeg)|*.png;*.jpeg|All files (*.*)|*.*";
-            if (openFileDialog.ShowDialog() == true)
-            {
-                string selectedFileName = openFileDialog.FileName;
-                BitmapImage bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(selectedFileName);
-                bitmap.EndInit();
-                ImageBrush_UserImage.ImageSource = bitmap;
+            //OpenFileDialog openFileDialog = new OpenFileDialog();
+            //openFileDialog.Filter = "Image files (*.png;*.jpeg)|*.png;*.jpeg|All files (*.*)|*.*";
+            //if (openFileDialog.ShowDialog() == true)
+            //{
+            //    string selectedFileName = openFileDialog.FileName;
+            //    BitmapImage bitmap = new BitmapImage();
+            //    bitmap.BeginInit();
+            //    bitmap.UriSource = new Uri(selectedFileName);
+            //    bitmap.EndInit();
+            //    ImageBrush_UserImage.ImageSource = bitmap;
 
-                imageBase64 = Convert.ToBase64String(System.IO.File.ReadAllBytes(selectedFileName));
-            }
+            //    imageBase64 = Convert.ToBase64String(System.IO.File.ReadAllBytes(selectedFileName));
+            //}
         }
     }
 }

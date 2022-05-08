@@ -19,23 +19,23 @@ namespace Servidor
         {
             string[] agrs = Environment.GetCommandLineArgs();
 
-            foreach(string arg in agrs)
+            foreach (string arg in agrs)
             {
-                if(arg == "--debug")
+                if (arg == "--debug")
                 {
                     DEBUG_MODE = true;
                     Log("DEBUG_MODE ligado");
                 }
             }
 
-            if(!Directory.Exists(logPath))
+            if (!Directory.Exists(logPath))
             {
                 Directory.CreateDirectory(logPath);
             }
 
             var text = "------------------------------------------" + Environment.NewLine +
                        "- Data: " + DateTime.Now.ToString("G") + Environment.NewLine +
-                       "- Servidor: " + Properties.Settings.Default.listenAddress + ":"+ Properties.Settings.Default.port + Environment.NewLine +
+                       "- Servidor: " + Properties.Settings.Default.listenAddress + ":" + Properties.Settings.Default.port + Environment.NewLine +
                        "- Ficheiro Configurações: " + AppDomain.CurrentDomain.SetupInformation.ConfigurationFile + Environment.NewLine +
                        "------------------------------------------";
             Console.WriteLine(text);
@@ -60,7 +60,7 @@ namespace Servidor
         {
             try
             {
-                if(DEBUG_MODE)
+                if (DEBUG_MODE)
                 {
                     Log("[DEBUG_MODE] " + message);
                 }
@@ -69,7 +69,7 @@ namespace Servidor
                     File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Log("Erro ao tentar fazer Log interno: " + ex.Message);
             }

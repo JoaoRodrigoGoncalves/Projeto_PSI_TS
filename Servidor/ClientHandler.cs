@@ -1,11 +1,11 @@
-﻿using EI.SI;
-using Core;
-using System;
-using System.Net.Sockets;
-using System.Threading;
+﻿using Core;
+using EI.SI;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
+using System.Threading;
 
 namespace Servidor
 {
@@ -54,7 +54,7 @@ namespace Servidor
                                 #region MESSAGE
                                 case PacketType.MESSAGE:
 
-                                    if(dados.Contents != null)
+                                    if (dados.Contents != null)
                                     {
                                         Message_Packet mensagem = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
 
@@ -79,12 +79,12 @@ namespace Servidor
                                         Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
 
-                                    break; 
+                                    break;
                                 #endregion
 
                                 #region USER_LIST_REQUEST
                                 case PacketType.USER_LIST_REQUEST:
-                                
+
                                     Basic_Packet user_list_response_packet = new Basic_Packet();
                                     user_list_response_packet.Type = PacketType.USER_LIST_RESPONSE;
 
@@ -95,6 +95,7 @@ namespace Servidor
                                         UserListItem_Packet this_user = new UserListItem_Packet();
                                         this_user.userID = user.userID;
                                         this_user.username = user.username;
+                                        this_user.userImage = user.userImage;
                                         user_list.Add(this_user);
                                     }
 
@@ -112,7 +113,7 @@ namespace Servidor
                                 #region MESSAGE_HISTORY_REQUEST
                                 case PacketType.MESSAGE_HISTORY_REQUEST:
 
-                                    if(dados.Contents != null)
+                                    if (dados.Contents != null)
                                     {
                                         if (uint.TryParse(dados.Contents.ToString(), out uint requested_user_id))
                                         {
@@ -151,17 +152,17 @@ namespace Servidor
                                         Logger.Log("Recebido pacote mal formatado do tipo MESSAGE_HISTORY_REQUEST");
                                         Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
-                                    break; 
+                                    break;
                                 #endregion
 
                                 #region AUTH_REQUEST
                                 case PacketType.AUTH_REQUEST:
 
-                                    if(dados.Contents != null)
+                                    if (dados.Contents != null)
                                     {
                                         Auth_Request_Packet auth_request = JsonConvert.DeserializeObject<Auth_Request_Packet>(dados.Contents.ToString());
-                                    
-                                        if(!String.IsNullOrWhiteSpace(auth_request.username) || !String.IsNullOrWhiteSpace(auth_request.password))
+
+                                        if (!String.IsNullOrWhiteSpace(auth_request.username) || !String.IsNullOrWhiteSpace(auth_request.password))
                                         {
                                             // Criar pacote base
                                             Basic_Packet auth_response = new Basic_Packet();
@@ -174,18 +175,18 @@ namespace Servidor
                                             if (Database.LogUserIn(auth_request.username, auth_request.password, out Database.ClientInfo dados_cliente, out string errorMessage))
                                             {
 
-                                                if(UserManagement.GetUser((uint)dados_cliente.userID) == null)
+                                                if (UserManagement.GetUser((uint)dados_cliente.userID) == null)
                                                 {
                                                     userID = dados_cliente.userID; // Só podemos dar userID à sessão depois de establecer que não é uma dupla ligação
                                                     Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
 
                                                     // Adicionar à lista de utilizadores
-                                                    UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.imageB64, networkStream);
+                                                    UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.userImage, networkStream);
 
                                                     // Preencher dados de resposta
                                                     auth.success = true;
                                                     auth.userID = userID;
-                                                    auth.userImage = dados_cliente.imageB64;
+                                                    auth.userImage = dados_cliente.userImage;
                                                     auth.message = null;
 
                                                     if (UserManagement.users.Count > 1)
@@ -197,7 +198,7 @@ namespace Servidor
                                                         UserJoined_Packet join = new UserJoined_Packet();
                                                         join.userID = dados_cliente.userID;
                                                         join.username = dados_cliente.username;
-                                                        join.userImage = dados_cliente.imageB64;
+                                                        join.userImage = dados_cliente.userImage;
                                                         user_join.Contents = join;
 
                                                         // Emitr mensagem para todos os utilizadores, excepto o atual
@@ -245,7 +246,7 @@ namespace Servidor
                                 #region REGISTER_REQUEST
                                 case PacketType.REGISTER_REQUEST:
 
-                                    if(dados.Contents != null)
+                                    if (dados.Contents != null)
                                     {
                                         Register_Request_Packet register_request = JsonConvert.DeserializeObject<Register_Request_Packet>(dados.Contents.ToString());
 
@@ -255,7 +256,7 @@ namespace Servidor
 
                                         // Instanciar a resposta
                                         Register_Response_Packet register = new Register_Response_Packet();
-                                
+
                                         /**
                                          * Verificações de comprimento máximo do nome de utilizador e de segurança de password
                                          */
@@ -271,7 +272,7 @@ namespace Servidor
                                             {
                                                 if (register_request.password.Length >= 8)
                                                 {
-                                                    if(Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
+                                                    if (Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
                                                     {
                                                         register.success = true;
                                                         register.message = null;
@@ -300,7 +301,7 @@ namespace Servidor
                                         Logger.Log("Recebido pacote mal formatado do tipo REGISTER_REQUEST");
                                         Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
-                                    break; 
+                                    break;
                                 #endregion
 
                                 default:
@@ -319,7 +320,7 @@ namespace Servidor
                                 Logger.Log(String.Format("Cliente {0} ({1}) desligado.", UserManagement.GetUsername((uint)userID), userID));
                                 userDisconnectHandler();
                             }
-                            break; 
+                            break;
                             #endregion
                     }
                 }
@@ -330,7 +331,7 @@ namespace Servidor
                     userDisconnectHandler();
                     break; // Saltar fora do while loop
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logger.Log(String.Format("Ocorreu um erro inesperado com a ligação ao utilizador {0}: {1}", userID, ex.Message));
                     try
@@ -340,7 +341,7 @@ namespace Servidor
                         networkStream.Write(force_close, 0, force_close.Length);
                         networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Esta linha pode ou não ter de sair daqui
                     }
-                    catch(Exception new_ex)
+                    catch (Exception new_ex)
                     {
                         Logger.Log("Não foi possível enviar um EOT para o utilizador: " + new_ex.Message);
                     }
@@ -361,7 +362,7 @@ namespace Servidor
         {
             UserManagement.RemoveUser((uint)userID);
 
-            if(UserManagement.users.Count > 0)
+            if (UserManagement.users.Count > 0)
             {
                 /**
                  * Se houver utilizadores ligados criamos ou pacote,

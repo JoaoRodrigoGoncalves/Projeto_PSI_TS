@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Core;
 using EI.SI;
+using Newtonsoft.Json;
+using System;
 using System.Windows;
 using System.Windows.Media;
-using Core;
-using Newtonsoft.Json;
 
 namespace Cliente
 {
@@ -31,8 +31,8 @@ namespace Cliente
              * se a ligação já foi establecida anteriormente, de forma
              * a impedir que se tente iniciar a ligação multiplas vezes
              */
-            
-            if(Session.Client == null)
+
+            if (Session.Client == null)
                 Session.StartTCPSession();
 
             if (!String.IsNullOrWhiteSpace(textBox_nomeUtilizador.Text))
@@ -53,7 +53,7 @@ namespace Cliente
                 // Esperar e ler os dados enviados pelo servidor. Caso a autenticação
                 // tenha sido bem sucedida, guardar os dados do utilizador atual e mostrar janela de chat.
                 // Caso contrário indicar que os dados fornecidos estão incorretos
-                
+
                 // Ler resposta do tipo AUTH_RESPONSE
 
                 Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
@@ -79,7 +79,7 @@ namespace Cliente
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
                         Session.userID = resposta_login.userID;
                         Session.username = textBox_nomeUtilizador.Text;
-                        Session.userImageB64 = resposta_login.userImage;
+                        Session.userImage = resposta_login.userImage;
 
                         // Limpeza de caixas de texto para caso o utilizador termine sessão
                         textBox_nomeUtilizador.Clear();
@@ -134,7 +134,7 @@ namespace Cliente
 
         private void textBox_palavraPasse_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if(e.Key == System.Windows.Input.Key.Enter)
+            if (e.Key == System.Windows.Input.Key.Enter)
                 button_entrar_Click(sender, e);
         }
     }
