@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Threading;
 
 namespace Servidor
 {
@@ -38,7 +39,7 @@ namespace Servidor
                        "- Servidor: " + Properties.Settings.Default.listenAddress + ":" + Properties.Settings.Default.port + Environment.NewLine +
                        "- Ficheiro Configurações: " + AppDomain.CurrentDomain.SetupInformation.ConfigurationFile + Environment.NewLine +
                        "------------------------------------------";
-            Console.WriteLine(text);
+            Log(text);
             File.WriteAllText(fileName, text);
         }
 
@@ -48,7 +49,12 @@ namespace Servidor
         /// <param name="message">Dados a serem registados.</param>
         internal static void Log(string message)
         {
-            Console.WriteLine("[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+            // Fazemos com que a output para a consola seja efetuada por outro thread para
+            // a execução do servidor não ficar bloqueada caso haja texto esteja selecionado
+            ThreadPool.QueueUserWorkItem(delegate
+            {
+                Console.WriteLine("[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
+            });
             File.AppendAllText(fileName, Environment.NewLine + "[" + DateTime.Now.ToString("dd-MM-yyyy HH:mm:ss:fff") + "] " + message);
         }
 
