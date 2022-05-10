@@ -66,8 +66,13 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style TargetType="RadioButton">
+            <Setter Property="FontSize" Value="22"></Setter>
+            <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
+            <Setter Property="Margin" Value="5"></Setter>
+        </Style>
     </Window.Resources>
-    
+
     <Border Margin="20 10 20 0">
         <StackPanel>
             <TextBlock FontSize="25" FontWeight="Bold">Registar</TextBlock>
@@ -76,38 +81,34 @@
 
             <!-- Campos -->
             <StackPanel Margin="10 20">
-                
-                <!-- Campo para a Imagem do User -->
-                <StackPanel>
-                    <Border Width="100" Height="100" CornerRadius="80" BorderThickness="1" BorderBrush="Gray">
-                        <Border.Background>
-                            <ImageBrush x:Name="ImageBrush_UserImage" ImageSource="/Resources/userIcon.png"/>
-                        </Border.Background>
-                    </Border>
 
-                    <!-- Butão para Carregar Imagem -->
-                    <!-- Uma grid para centar o botão -->
-                    <Grid Margin="0 10 0 10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"></ColumnDefinition>
-                            <ColumnDefinition Width="2*"></ColumnDefinition>
-                            <ColumnDefinition Width="*"></ColumnDefinition>
-                        </Grid.ColumnDefinitions>
-
-                        <Button x:Name="button_UserImage"
-                            Style="{DynamicResource RoundedButtonStyle}"
-                            Margin="15 0 15 0"
-                            FontSize="15"
-                            FontWeight="DemiBold"
-                            Grid.Column="1" Click="button_UserImage_Click"
-                            >
-                            Carregar
-                        </Button>
-                    </Grid>
+                <!-- Campos para escolher a user image -->
+                <StackPanel Margin="0 10">
+                    <TextBlock Margin="10" FontSize="15" FontWeight="Bold">User Images</TextBlock>
+                    <StackPanel Margin="30 0" Orientation="Horizontal" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                        <RadioButton GroupName="imageGroup" Name="imageDefault" >
+                            <Border BorderThickness="1" BorderBrush="Black">
+                                <Image Source="/Resources/userIcon.png" Width="20" VerticalAlignment="Center"></Image>
+                            </Border>
+                        </RadioButton>
+                        <RadioButton GroupName="imageGroup" Name="image1">
+                            <Image Source="/Resources/userIcon1.png" Width="20" VerticalAlignment="Center"></Image>
+                        </RadioButton>
+                        <RadioButton GroupName="imageGroup" Name="image2">
+                            <Image Source="/Resources/userIcon2.png" Width="20" VerticalAlignment="Center"></Image>
+                        </RadioButton>
+                        <RadioButton GroupName="imageGroup" Name="image3">
+                            <Image Source="/Resources/userIcon3.png" Width="20" VerticalAlignment="Center"></Image>
+                        </RadioButton>
+                        <RadioButton GroupName="imageGroup" Name="image4">
+                            <Image Source="/Resources/userIcon4.png" Width="20" VerticalAlignment="Center"></Image>
+                        </RadioButton>
+                    </StackPanel>
                 </StackPanel>
+                <Separator></Separator>
 
                 <!-- Campo nome de utilizador-->
-                <TextBlock>Nome de Utilizador</TextBlock>
+                <TextBlock Margin="0 10">Nome de Utilizador</TextBlock>
                 <TextBox x:Name="textBox_nomeUtilizador" BorderBrush="Black" Padding="0 2" MaxLength="15"/>
 
                 <!-- Campo Password-->
@@ -137,7 +138,7 @@
                         Registar
                     </Button>
                 </Grid>
-                
+
                 <!-- Stackpanel com a mensagem de erro -->
                 <StackPanel>
                     <TextBlock 

@@ -95,6 +95,33 @@ namespace Cliente
             {
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
+
+
+            int imageProfile;
+
+            if(image1.IsChecked == true)
+            {
+                imageProfile = 2; 
+            }
+            else if(image2.IsChecked == true)
+            {
+                imageProfile = 3;
+            }
+            else if (image3.IsChecked == true)
+            {
+                imageProfile = 4;
+            }
+            else if (image4.IsChecked == true)
+            {
+                imageProfile = 5;
+            }
+            else
+            {
+                imageProfile = 1;
+            }
+
+
+
         }
 
         private void button_UserImage_Click(object sender, RoutedEventArgs e)
