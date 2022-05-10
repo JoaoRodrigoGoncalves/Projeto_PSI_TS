@@ -1,6 +1,10 @@
-﻿using EI.SI;
+﻿using Core;
+using EI.SI;
+using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
+using System.Text;
 using System.Windows;
 
 namespace Cliente
@@ -13,6 +17,7 @@ namespace Cliente
         internal static string username = null;
         internal static uint? userImage = null;
         internal static Login loginReference = null; // Utilizado para poder terminar sessão e poder regressar à janela de login inicial
+        internal static AesCryptoServiceProvider aes = null;
 
         internal static void StartTCPSession()
         {
@@ -26,6 +31,29 @@ namespace Cliente
                     Session.Client.Connect(endPoint);
                     Session.networkStream = Session.Client.GetStream();
                     ProtocolSI protocolSI = new ProtocolSI();
+
+                    // Enviar public key
+                    Cryptography.generateKeys();
+                    byte[] sendPubKey = protocolSI.Make(ProtocolSICmdType.PUBLIC_KEY, Convert.ToBase64String(Cryptography.getPublicKey()));
+                    networkStream.Write(sendPubKey, 0, sendPubKey.Length);
+
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+                    if(protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    {
+                        // Receber secret_key
+                        networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                        aes = new AesCryptoServiceProvider();
+                        string password = Encoding.UTF8.GetString(Cryptography.Decrypt(protocolSI.GetStringFromData()));
+                        aes.IV = Cryptography.CreateIV(password);
+                        aes.Key = Cryptography.CreatePrivateKey(password);
+                    }
+                    else
+                    {
+                        CloseTCPSession();
+                        MessageBox.Show("Ocorreu um erro ao trocar as chaves com o servidor.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                        Application.Current.Shutdown();
+                    }
                 }
                 else
                 {
@@ -47,7 +75,6 @@ namespace Cliente
                 }
             }
         }
-
 
         private static void ResetSettings()
         {

@@ -13,6 +13,7 @@ namespace Servidor
         {
             Logger.StartLogger();
             Logger.Log("A iniciar servidor...");
+            ServerCryptography.setAES();
 
             IPEndPoint endpoint = null;
 

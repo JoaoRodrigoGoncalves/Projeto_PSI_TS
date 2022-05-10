@@ -39,23 +39,21 @@ namespace Cliente
                         Register_Request_Packet registo = new Register_Request_Packet();
                         registo.username = textBox_nomeUtilizador.Text;
                         registo.password = textBox_palavraPasse.Password;
-                        registo.password = textBox_verificarPalavraPasse.Password;
+                        registo.userImage = null;
                         //registo.userImage = imageBase64;
 
                         pedidoRegisto.Contents = registo;
 
-                        byte[] dados = protocolSI.Make(ProtocolSICmdType.DATA, JsonConvert.SerializeObject(pedidoRegisto));
+                        byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pedidoRegisto)));
                         Session.networkStream.Write(dados, 0, dados.Length);
 
                         Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-                        while (protocolSI.GetCmdType() != ProtocolSICmdType.DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
+                        while (protocolSI.GetCmdType() != ProtocolSICmdType.SYM_CIPHER_DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
                         {
                             Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                         }
 
-                        Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(protocolSI.GetStringFromData());
-
-                        //Close();
+                        Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
 
                         if (pacote.Type == PacketType.REGISTER_RESPONSE)
                         {

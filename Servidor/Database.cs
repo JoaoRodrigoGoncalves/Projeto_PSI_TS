@@ -60,7 +60,7 @@ namespace Servidor
                 }
                 else
                 {
-                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, ImagemB64) VALUES ('{0}', '{1}', '{2}');", username, password, userImage);
+                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, useerImage) VALUES ('{0}', '{1}', '{2}');", username, password, userImage);
                 }
 
 
