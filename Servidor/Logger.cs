@@ -34,7 +34,8 @@ namespace Servidor
                 Directory.CreateDirectory(logPath);
             }
 
-            var text = "------------------------------------------" + Environment.NewLine +
+            var text = Environment.NewLine +
+                       "------------------------------------------" + Environment.NewLine +
                        "- Data: " + DateTime.Now.ToString("G") + Environment.NewLine +
                        "- Servidor: " + Properties.Settings.Default.listenAddress + ":" + Properties.Settings.Default.port + Environment.NewLine +
                        "- Ficheiro Configurações: " + AppDomain.CurrentDomain.SetupInformation.ConfigurationFile + Environment.NewLine +

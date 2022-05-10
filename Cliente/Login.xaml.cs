@@ -85,6 +85,7 @@ namespace Cliente
                         textBox_nomeUtilizador.Clear();
                         textBox_palavraPasse.Clear();
                         textBox_nomeUtilizador.Focus();
+                        textBlock_Message.Text = "";
 
                         this.Hide();
                         Chat janela_chat = new Chat();
