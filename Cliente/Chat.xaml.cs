@@ -48,6 +48,10 @@ namespace Cliente
                 UserManagement.AddUser(user.userID, user.username, user.userImage);
                 textBlock_listaUtilizadores.Text += user.username + " ";
             }
+
+            // Aplicar imagem do utilizador atual
+            userImage.ImageSource = Utilities.getImage(Session.userImage);
+
             // Adição de notificação de entrada
             ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
             messagePanel.Children.Add(joinNotification);

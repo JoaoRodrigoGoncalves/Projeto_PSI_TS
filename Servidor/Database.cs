@@ -56,13 +56,16 @@ namespace Servidor
 
                 if (userImage == null)
                 {
-                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password) VALUES ('{0}', '{1}');", username, password);
+                    cmd.CommandText = "INSERT INTO utilizadores (Username, Password) VALUES (@Username, @Password);";
                 }
                 else
                 {
-                    cmd.CommandText = String.Format("INSERT INTO utilizadores (Username, Password, useerImage) VALUES ('{0}', '{1}', '{2}');", username, password, userImage);
+                    cmd.CommandText = "INSERT INTO utilizadores (Username, Password, userImage) VALUES (@Username, @Password, @UserImage);";
+                    cmd.Parameters.AddWithValue("@UserImage", userImage);
                 }
 
+                cmd.Parameters.AddWithValue("@Username", username);
+                cmd.Parameters.AddWithValue("@Password", password);
 
                 if (cmd.ExecuteNonQuery() == 1)
                 {
@@ -80,7 +83,8 @@ namespace Servidor
             catch (Exception ex)
             {
                 Logger.Log("Ocorreu um erro ao registar o utilizador: " + ex.Message);
-                Logger.LogQuietly(ex.InnerException.StackTrace);
+                if (ex.InnerException != null)
+                    Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
@@ -114,7 +118,10 @@ namespace Servidor
 
                 // TODO: Processar password
 
-                cmd.CommandText = "SELECT ID, userImage FROM Utilizadores WHERE Username=\"" + username + "\" AND Password=\"" + password + "\" LIMIT 1;";
+                cmd.CommandText = "SELECT ID, userImage FROM Utilizadores WHERE Username=@Username AND Password=@Password LIMIT 1;";
+                cmd.Parameters.AddWithValue("@Username", username);
+                cmd.Parameters.AddWithValue("@Password", password);
+
                 MySqlDataReader data = cmd.ExecuteReader();
 
                 if (data.HasRows) // Se existe um registo
@@ -172,8 +179,9 @@ namespace Servidor
                 Database db = new Database();
                 cmd.Connection = db.ConnectToDatabase();
 
-                cmd.CommandText = "INSERT INTO Mensagens (Texto, IDUtilizador) VALUES ('" + message + "', '" + userID + "')";
-
+                cmd.CommandText = "INSERT INTO Mensagens (Texto, IDUtilizador) VALUES (@UserMessage, @UserID)";
+                cmd.Parameters.AddWithValue("@UserMessage", message);
+                cmd.Parameters.AddWithValue("@UserID", userID);
 
                 if (cmd.ExecuteNonQuery() == 1)
                 {
@@ -211,7 +219,8 @@ namespace Servidor
                 cmd = new MySqlCommand();
                 cmd.Connection = db.ConnectToDatabase();
 
-                cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=" + userID + " ORDER BY ID DESC LIMIT 3;";
+                cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=@UserID ORDER BY ID DESC LIMIT 3;";
+                cmd.Parameters.AddWithValue("@UserID", userID);
                 MySqlDataReader reader = cmd.ExecuteReader();
 
                 if (reader.HasRows) // Verificar se existem mensagens em registo
@@ -262,7 +271,8 @@ namespace Servidor
                 cmd = new MySqlCommand();
                 cmd.Connection = db.ConnectToDatabase();
 
-                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE ID=" + userID + ";";
+                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE ID=@UserID;";
+                cmd.Parameters.AddWithValue("@UserID", userID);
                 MySqlDataReader reader = cmd.ExecuteReader();
 
                 bool exists = reader.HasRows;
@@ -273,6 +283,43 @@ namespace Servidor
             catch (Exception ex)
             {
                 Logger.Log("Não foi possível procurar pelo utilizador (" + userID + "): " + ex.Message);
+                Logger.LogQuietly(ex.InnerException.StackTrace);
+            }
+            finally
+            {
+                if (cmd.Connection != null)
+                    cmd.Connection.Close();
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Verifica se um utilizador existe com base no username indicado
+        /// </summary>
+        /// <param name="username">username a verificar</param>
+        /// <returns>True se existir, caso contrario false</returns>
+        internal static bool UserExists(string username)
+        {
+            Database db = new Database();
+            MySqlCommand cmd = null;
+
+            try
+            {
+                cmd = new MySqlCommand();
+                cmd.Connection = db.ConnectToDatabase();
+
+                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE Username=@Username;";
+                cmd.Parameters.AddWithValue("@Username", username);
+                MySqlDataReader reader = cmd.ExecuteReader();
+
+                bool exists = reader.HasRows;
+                reader.Close();
+                cmd.Connection.Close();
+                return exists;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Não foi possível procurar pelo utilizador (" + username + "): " + ex.Message);
                 Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally

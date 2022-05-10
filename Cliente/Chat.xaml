@@ -167,7 +167,7 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
                     <Border Width="50" Height="50" CornerRadius="80" BorderThickness="1" BorderBrush="#0be044">
                         <Border.Background>
-                            <ImageBrush ImageSource="/Resources/userIcon.png"/>
+                            <ImageBrush x:Name="userImage" ImageSource="/Resources/userIcon.png"/>
                         </Border.Background>
                     </Border>
                     <TextBlock

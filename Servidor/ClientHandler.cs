@@ -217,7 +217,7 @@ namespace Servidor
                                                 }
                                                 else
                                                 {
-                                                    Logger.Log(String.Format("Tentativa de dupla sessão para o utilizador {0} em {1}", userID, Logger.GetSocket(this.client)));
+                                                    Logger.Log(String.Format("Tentativa de dupla sessão para o utilizador {0} em {1}", auth_request.username, Logger.GetSocket(this.client)));
 
                                                     auth.success = false;
                                                     auth.userID = null;
@@ -271,9 +271,9 @@ namespace Servidor
                                          * Verificações de comprimento máximo do nome de utilizador e de segurança de password
                                          */
 
+                                        register.success = false;
                                         if (String.IsNullOrWhiteSpace(register_request.username) || String.IsNullOrWhiteSpace(register_request.password))
                                         {
-                                            register.success = false;
                                             register.message = "O campo username ou passowrd devem ser preenchidos";
                                         }
                                         else
@@ -282,21 +282,26 @@ namespace Servidor
                                             {
                                                 if (register_request.password.Length >= 8)
                                                 {
-                                                    if (Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
+                                                    if (!Database.UserExists(register_request.username))
                                                     {
-                                                        register.success = true;
-                                                        register.message = null;
+                                                        if (Database.RegisterUser(register_request.username, register_request.password, register_request.userImage))
+                                                        {
+                                                            register.success = true;
+                                                            register.message = null;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        register.message = "Já existe um utilizador com esse nome de utilizador";
                                                     }
                                                 }
                                                 else
                                                 {
-                                                    register.success = false;
                                                     register.message = "A password não cumpre os requisitos minimos (8 caracteres)";
                                                 }
                                             }
                                             else
                                             {
-                                                register.success = false;
                                                 register.message = "O username não pode ser maior do que 15 caracteres";
                                             }
                                         }

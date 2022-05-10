@@ -39,8 +39,27 @@ namespace Cliente
                         Register_Request_Packet registo = new Register_Request_Packet();
                         registo.username = textBox_nomeUtilizador.Text;
                         registo.password = textBox_palavraPasse.Password;
-                        registo.userImage = null;
-                        //registo.userImage = imageBase64;
+
+                        uint? imageProfile = null;
+
+                        if (image1.IsChecked == true)
+                        {
+                            imageProfile = 1;
+                        }
+                        else if (image2.IsChecked == true)
+                        {
+                            imageProfile = 2;
+                        }
+                        else if (image3.IsChecked == true)
+                        {
+                            imageProfile = 3;
+                        }
+                        else if (image4.IsChecked == true)
+                        {
+                            imageProfile = 4;
+                        }
+
+                        registo.userImage = imageProfile;
 
                         pedidoRegisto.Contents = registo;
 
@@ -95,50 +114,6 @@ namespace Cliente
             {
                 textBox_nomeUtilizador.BorderBrush = Brushes.Red;
             }
-
-
-            int imageProfile;
-
-            if(image1.IsChecked == true)
-            {
-                imageProfile = 2; 
-            }
-            else if(image2.IsChecked == true)
-            {
-                imageProfile = 3;
-            }
-            else if (image3.IsChecked == true)
-            {
-                imageProfile = 4;
-            }
-            else if (image4.IsChecked == true)
-            {
-                imageProfile = 5;
-            }
-            else
-            {
-                imageProfile = 1;
-            }
-
-
-
-        }
-
-        private void button_UserImage_Click(object sender, RoutedEventArgs e)
-        {
-            //OpenFileDialog openFileDialog = new OpenFileDialog();
-            //openFileDialog.Filter = "Image files (*.png;*.jpeg)|*.png;*.jpeg|All files (*.*)|*.*";
-            //if (openFileDialog.ShowDialog() == true)
-            //{
-            //    string selectedFileName = openFileDialog.FileName;
-            //    BitmapImage bitmap = new BitmapImage();
-            //    bitmap.BeginInit();
-            //    bitmap.UriSource = new Uri(selectedFileName);
-            //    bitmap.EndInit();
-            //    ImageBrush_UserImage.ImageSource = bitmap;
-
-            //    imageBase64 = Convert.ToBase64String(System.IO.File.ReadAllBytes(selectedFileName));
-            //}
         }
     }
 }
