@@ -39,12 +39,12 @@ namespace Cliente
 
                     networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
 
-                    if(protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
                     {
                         // Receber secret_key
                         networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
                         aes = new AesCryptoServiceProvider();
-                        string password = Encoding.UTF8.GetString(Cryptography.Decrypt(protocolSI.GetStringFromData()));
+                        string password = Encoding.UTF8.GetString(Cryptography.privateKeyDecrypt(protocolSI.GetStringFromData()));
                         aes.IV = Cryptography.CreateIV(password);
                         aes.Key = Cryptography.CreatePrivateKey(password);
                     }

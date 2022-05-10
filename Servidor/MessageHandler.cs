@@ -15,7 +15,7 @@ namespace Servidor
         {
             ProtocolSI SI = new ProtocolSI();
 
-            byte[] data = SI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerCryptography.aes, message));
+            byte[] data = SI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, message));
 
             if (excludedUser.HasValue) // Verificar se há um utilizador a ser excluído
             {

@@ -1,18 +1,21 @@
 ﻿using Core;
-using System;
 using System.Security.Cryptography;
 
 namespace Servidor
 {
-    internal class ServerCryptography
+    internal class ServerSideCryptography
     {
         internal static AesCryptoServiceProvider aes = new AesCryptoServiceProvider();
+        private static string pwd = null;
 
-        internal static string setAES()
+        internal static string getAESSecret()
         {
-            string pwd = RandomPassword();
-            aes.IV = Cryptography.CreateIV(pwd);
-            aes.Key = Cryptography.CreatePrivateKey(pwd);
+            if (pwd == null)
+            {
+                pwd = RandomPassword();
+                aes.IV = Cryptography.CreateIV(pwd);
+                aes.Key = Cryptography.CreatePrivateKey(pwd);
+            }
             return pwd;
         }
 

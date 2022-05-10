@@ -7,8 +7,12 @@ namespace Core
 {
     public class Cryptography
     {
+        /**
+         * Código referente a chaves assimétricas
+         */
+
         /// <summary>
-        /// Gera e guarda a chave publica e privada
+        /// Gera e guarda a chave pública e privada
         /// </summary>
         public static void generateKeys()
         {
@@ -20,9 +24,9 @@ namespace Core
         }
 
         /// <summary>
-        /// Obtém o CspBlob apenas com a chave publica
+        /// Obtém o CspBlob apenas com a chave pública
         /// </summary>
-        /// <returns></returns>
+        /// <returns><see cref="byte[]"/> com chave pública</returns>
         public static byte[] getPublicKey()
         {
             var parameters = new CspParameters
@@ -34,9 +38,9 @@ namespace Core
         }
 
         /// <summary>
-        /// Obtém o CspBlob com a chave publica/privada
+        /// Obtém o CspBlob com a chave pública/privada
         /// </summary>
-        /// <returns></returns>
+        /// <returns><see cref="byte[]"/> com o key-pair de chave pública e privada</returns>
         public static byte[] getPrivateKey()
         {
             var parameters = new CspParameters
@@ -48,7 +52,7 @@ namespace Core
         }
 
         /// <summary>
-        /// Encripa texto com a chave publica na blob csp
+        /// Encripa texto com a chave pública na blob csp
         /// </summary>
         /// <param name="CspBlob"></param>
         /// <param name="text"></param>
@@ -62,12 +66,12 @@ namespace Core
         }
 
         /// <summary>
-        /// Desencripta dados que foram encriptados com a chave publica do cliente
+        /// Desencripta dados que foram encriptados com a chave pública do cliente
         /// </summary>
-        /// <param name="CspBlob">Chave publica e privada do cliente</param>
+        /// <param name="CspBlob">Chave pública e privada do cliente</param>
         /// <param name="dadosBase64">Dados a desencriptar</param>
-        /// <returns></returns>
-        public static byte[] Decrypt(string dadosBase64)
+        /// <returns><see cref="byte[]"/> dados desencriptados</returns>
+        public static byte[] privateKeyDecrypt(string dadosBase64)
         {
             RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();
             rsa.ImportCspBlob(getPrivateKey());
@@ -75,36 +79,9 @@ namespace Core
             return rsa.Decrypt(dados, true);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        public static string AESEncrypt(AesCryptoServiceProvider aes, string text)
-        {
-            byte[] textDecifrado = Encoding.UTF8.GetBytes(text);
-            MemoryStream ms = new MemoryStream();
-            CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write);
-            cs.Write(textDecifrado, 0, textDecifrado.Length);
-            cs.Close();
-            return Convert.ToBase64String(ms.ToArray());
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="textCrifradoB64"></param>
-        /// <returns></returns>
-        public static string AESDecrypt(AesCryptoServiceProvider aes, string textCrifradoB64)
-        {
-            byte[] textCifrado = Convert.FromBase64String(textCrifradoB64);
-            MemoryStream ms = new MemoryStream(textCifrado);
-            CryptoStream cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
-            byte[] textDecifrado = new byte[ms.Length];
-            int bytesLidos = cs.Read(textDecifrado, 0, textDecifrado.Length);
-            cs.Close();
-            return Encoding.UTF8.GetString(textDecifrado, 0, bytesLidos);
-        }
+        /**
+         * Código referente a chaves simétricas
+         */
 
         /// <summary>
         /// Cria um vetor de inicialização baseeado na chave secreta
@@ -128,6 +105,39 @@ namespace Core
             byte[] salt = new byte[] { 5, 4, 2, 3, 6, 5, 1, 9 };
             Rfc2898DeriveBytes pwgne = new Rfc2898DeriveBytes(secret_key, salt, 1000);
             return pwgne.GetBytes(16);
+        }
+
+        /// <summary>
+        /// Encripta uma string de texto com a chave secreta
+        /// </summary>
+        /// <param name="aes">Objeto <see cref="AesCryptoServiceProvider"/> preenchido com vetor de inicialização e chave privada</param>
+        /// <param name="text">Texto a encriptar</param>
+        /// <returns>String cifrada em Base64</returns>
+        public static string AESEncrypt(AesCryptoServiceProvider aes, string text)
+        {
+            byte[] textDecifrado = Encoding.UTF8.GetBytes(text);
+            MemoryStream ms = new MemoryStream();
+            CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write);
+            cs.Write(textDecifrado, 0, textDecifrado.Length);
+            cs.Close();
+            return Convert.ToBase64String(ms.ToArray());
+        }
+
+        /// <summary>
+        /// Desincripta uma string de texto cifrado em base 64 com a chave secreta
+        /// </summary>
+        /// <param name="aes">Objeto <see cref="AesCryptoServiceProvider"/> preenchido com vetor de inicialização e chave privada</param>
+        /// <param name="textCrifradoB64"></param>
+        /// <returns>String desincriptada</returns>
+        public static string AESDecrypt(AesCryptoServiceProvider aes, string textCrifradoB64)
+        {
+            byte[] textCifrado = Convert.FromBase64String(textCrifradoB64);
+            MemoryStream ms = new MemoryStream(textCifrado);
+            CryptoStream cs = new CryptoStream(ms, aes.CreateDecryptor(), CryptoStreamMode.Read);
+            byte[] textDecifrado = new byte[ms.Length];
+            int bytesLidos = cs.Read(textDecifrado, 0, textDecifrado.Length);
+            cs.Close();
+            return Encoding.UTF8.GetString(textDecifrado, 0, bytesLidos);
         }
     }
 }

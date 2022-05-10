@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 namespace Servidor
@@ -47,14 +46,14 @@ namespace Servidor
                             ack = protocolSI.Make(ProtocolSICmdType.ACK);
                             networkStream.Write(ack, 0, ack.Length);
 
-                            byte[] pubKey_response = protocolSI.Make(ProtocolSICmdType.SECRET_KEY, Cryptography.publicKeyEncrypt(clientPublicKey, ServerCryptography.setAES()));
+                            byte[] pubKey_response = protocolSI.Make(ProtocolSICmdType.SECRET_KEY, Cryptography.publicKeyEncrypt(clientPublicKey, ServerSideCryptography.getAESSecret()));
                             networkStream.Write(pubKey_response, 0, pubKey_response.Length);
 
                             break;
 
                         case ProtocolSICmdType.SYM_CIPHER_DATA:
                             //Obter os dados para a estrutura antes de enviar o ack
-                            Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(ServerCryptography.aes, protocolSI.GetStringFromData()));
+                            Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(ServerSideCryptography.aes, protocolSI.GetStringFromData()));
                             // Enviar o ack
                             ack = protocolSI.Make(ProtocolSICmdType.ACK);
                             networkStream.Write(ack, 0, ack.Length);
@@ -82,7 +81,7 @@ namespace Servidor
                                         Database.SaveUserMessage(mensagem.userID, mensagem.message);
 
                                         // Broadcast para todos os utilizadores, excepto o que enviou a mensagem
-                                        if(UserManagement.users.Count > 1)
+                                        if (UserManagement.users.Count > 1)
                                             MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(dados), userID);
                                     }
                                     else
@@ -114,7 +113,7 @@ namespace Servidor
                                     user_list_response_packet.Contents = user_list;
 
                                     string sentUserData = JsonConvert.SerializeObject(user_list_response_packet);
-                                    byte[] userList_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerCryptography.aes, sentUserData));
+                                    byte[] userList_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, sentUserData));
                                     networkStream.Write(userList_byte_response, 0, userList_byte_response.Length);
                                     Logger.LogQuietly("Enviada lista de clientes para " + UserManagement.GetUsername((uint)userID));
                                     Logger.LogQuietly(sentUserData);
@@ -143,7 +142,7 @@ namespace Servidor
                                                     messageHistory_response_packet.Contents = null;
                                                 }
 
-                                                byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerCryptography.aes, JsonConvert.SerializeObject(messageHistory_response_packet)));
+                                                byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(messageHistory_response_packet)));
                                                 networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
                                             }
                                             else
@@ -236,7 +235,7 @@ namespace Servidor
                                             }
 
                                             auth_response.Contents = auth;
-                                            byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerCryptography.aes, JsonConvert.SerializeObject(auth_response)));
+                                            byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(auth_response)));
                                             networkStream.Write(auth_byte_response, 0, auth_byte_response.Length);
                                         }
                                         else
@@ -304,7 +303,7 @@ namespace Servidor
 
                                         register_response.Contents = register;
 
-                                        byte[] register_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerCryptography.aes, JsonConvert.SerializeObject(register_response)));
+                                        byte[] register_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(register_response)));
                                         networkStream.Write(register_byte_response, 0, register_byte_response.Length);
                                     }
                                     else
@@ -338,7 +337,7 @@ namespace Servidor
                 catch (IOException ex) // A ligação foi fechada forçadamente
                 {
                     Logger.LogQuietly(ex.Message);
-                    if(userID.HasValue)
+                    if (userID.HasValue)
                     {
                         Logger.Log(String.Format("Cliente {0} ({1}) perdeu ligação: Ligação fechada forçadamente", UserManagement.GetUsername((uint)userID), userID));
                         userDisconnectHandler();
@@ -348,7 +347,7 @@ namespace Servidor
                 catch (Exception ex)
                 {
                     Logger.Log(String.Format("Ocorreu um erro inesperado com a ligação ao utilizador {0}: {1}", userID, ex.Message));
-                    if(ex.InnerException != null)
+                    if (ex.InnerException != null)
                     {
                         Logger.Log(ex.InnerException.Message);
                     }
@@ -378,7 +377,7 @@ namespace Servidor
         /// </summary>
         private void userDisconnectHandler()
         {
-            if(userID.HasValue)
+            if (userID.HasValue)
             {
                 UserManagement.RemoveUser((uint)userID);
 

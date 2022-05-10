@@ -107,7 +107,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="ServerCryptography.cs" />
+    <Compile Include="ServerSideCryptography.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
