@@ -108,24 +108,16 @@ namespace Cliente
                                 //Verificar se existem dados
                                 if (dados.Contents != null)
                                 {
+                                    
                                     UserJoined_Packet request_user_joined = JsonConvert.DeserializeObject<UserJoined_Packet>(dados.Contents.ToString());
-
-                                    UserManagement.AddUser((uint)request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
-
-                                    ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
-                                    messagePanel.Children.Add(joinNotification);
                                     textBlock_listaUtilizadores.Dispatcher.Invoke (() =>
                                     {
+                                        UserManagement.AddUser((uint)request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
+                                        ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
+                                        messagePanel.Children.Add(joinNotification);
                                         textBlock_listaUtilizadores.Text += " " + request_user_joined.username;
                                     });
-                                    //if (textBlock_listaUtilizadores.Dispatcher.CheckAccess())
-                                    //{
-                                    //    textBlock_listaUtilizadores.Text += " " + request_user_joined.username;
-                                    //}
-                                    //else
-                                    //{
-                                    //    textBlock_listaUtilizadores.Dispatcher.Invoke(new Action(()=>{ textBlock_listaUtilizadores.Text += " " + request_user_joined.username; }));
-                                    //}
+                                
                                     
 
                                 }
@@ -136,15 +128,17 @@ namespace Cliente
                                 //Remover da lista os utilizadores que sairem
                                 if (dados.Contents != null)
                                 {
-                                    ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername((uint)dados.Contents) + " saiu do chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
-                                    messagePanel.Children.Add(joinNotification);
-
-                                    UserManagement.RemoveUser((uint)dados.Contents);
-
-                                    foreach (var user in UserManagement.users)
+                                    textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
                                     {
-                                        textBlock_listaUtilizadores.Text += user.username + " ";
-                                    }
+                                        ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername((uint)dados.Contents) + " saiu do chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
+                                        messagePanel.Children.Add(joinNotification);
+
+                                        UserManagement.RemoveUser((uint)dados.Contents);
+                                        foreach (var user in UserManagement.users)
+                                        {
+                                            textBlock_listaUtilizadores.Text += user.username + " ";
+                                        }
+                                    });         
                                 }
                                 break;
 
