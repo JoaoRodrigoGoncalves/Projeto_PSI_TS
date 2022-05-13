@@ -87,7 +87,6 @@ namespace Servidor
                                     else
                                     {
                                         Logger.Log("Recebido pacote mal formatado do tipo MESSAGE");
-                                        Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
 
                                     break;
@@ -147,20 +146,17 @@ namespace Servidor
                                             }
                                             else
                                             {
-                                                Logger.Log("Utilizador pedido não existe");
-                                                Logger.LogQuietly(protocolSI.GetStringFromData());
+                                                Logger.Log("Utilizador pedido (ID " + requested_user_id + ") não existe");
                                             }
                                         }
                                         else
                                         {
                                             Logger.Log("Recebido pacote com conteúdos inválidos.");
-                                            Logger.LogQuietly(protocolSI.GetStringFromData());
                                         }
                                     }
                                     else
                                     {
                                         Logger.Log("Recebido pacote mal formatado do tipo MESSAGE_HISTORY_REQUEST");
-                                        Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
                                     break;
                                 #endregion
@@ -241,13 +237,11 @@ namespace Servidor
                                         else
                                         {
                                             Logger.Log("Recebido pacote com conteúdos inválidos");
-                                            Logger.LogQuietly(protocolSI.GetStringFromData());
                                         }
                                     }
                                     else
                                     {
                                         Logger.Log("Recebido pacote mal formatado do tipo AUTH_REQUEST");
-                                        Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
 
                                     break;
@@ -314,7 +308,6 @@ namespace Servidor
                                     else
                                     {
                                         Logger.Log("Recebido pacote mal formatado do tipo REGISTER_REQUEST");
-                                        Logger.LogQuietly(protocolSI.GetStringFromData());
                                     }
                                     break;
                                 #endregion

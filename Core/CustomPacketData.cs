@@ -47,6 +47,7 @@ namespace Core
     public class Message_Packet
     {
         public uint userID { get; set; }
+        public DateTime time { get; set; }
         public string message { get; set; }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net.Sockets;
 
 namespace Core
@@ -52,6 +53,14 @@ namespace Core
         public static void RemoveUser(uint userID)
         {
             users.Remove(GetUser(userID));
+        }
+
+        /// <summary>
+        /// Remove todos os utilizadores da lista de utilizadores
+        /// </summary>
+        public static void FlushUsers()
+        {
+            users.Clear();
         }
     }
 

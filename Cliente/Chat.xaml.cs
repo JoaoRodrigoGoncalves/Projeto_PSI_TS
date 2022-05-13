@@ -69,12 +69,14 @@ namespace Cliente
             Message_Packet message = new Message_Packet();
             pacote.Type = PacketType.MESSAGE;
             message.message = mensagem;
+            message.time = DateTime.Now;
             message.userID = (uint)Session.userID;
             pacote.Contents = message;
             byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
 
             Session.networkStream.Write(dados, 0, dados.Length);
-            Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+
+            //Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); Temp Fix (?) (Supostamente ler ACK)
 
             ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
             messagePanel.Children.Add(clientMessageControl);
@@ -97,16 +99,14 @@ namespace Cliente
             {
                 while (protocolSI.GetCmdType() != ProtocolSICmdType.EOT)
                 {
-                    // Thread kill switch (?)
+                    // Verificação de termino de sessão
                     if (IsSignOut)
                         break;
 
 
+                    Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                     if (protocolSI.GetCmdType() == ProtocolSICmdType.SYM_CIPHER_DATA)
                     {
-                        int bytesRead = Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-                        byte[] ack;
-
                         /**
                          * Por algum motivo que não me é aparente, o thread não termina
                          * a tempo de não ler mais uma vez o buffer. Essa leitura devolve
@@ -117,12 +117,27 @@ namespace Cliente
                             //obter os dados para a estrutura
                             Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
                             // Enviar o ack
-                            ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                            byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
                             Session.networkStream.Write(ack, 0, ack.Length);
                             //Verificar qual o tipo de pedido
                             switch (dados.Type)
                             {
+                                #region MESSAGE
+                                case PacketType.MESSAGE:
+                                    if(dados.Contents != null)
+                                    {
+                                        messagePanel.Dispatcher.Invoke(() =>
+                                        {
+                                            Message_Packet msg = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
+                                            MessageControl message = new MessageControl(msg.userID, msg.time, msg.message);
+                                            messagePanel.Children.Add(message);
+                                        });
+                                    }
+                                    break; 
+                                #endregion
+
                                 //Saber qual o user que entrou no chat
+                                #region USER_JOINED
                                 case PacketType.USER_JOINED:
                                     //Adicionar á lista os utilizadores que estão online
                                     //Verificar se existem dados
@@ -138,9 +153,11 @@ namespace Cliente
                                         });
                                     }
                                     break;
+                                #endregion
 
                                 //Saber qual o user saiu do chat
                                 //Verificar se existem dados
+                                #region USER_LEFT
                                 case PacketType.USER_LEFT:
                                     //Remover da lista os utilizadores que sairem
                                     if (dados.Contents != null)
@@ -162,7 +179,8 @@ namespace Cliente
                                             }
                                         });
                                     }
-                                    break;
+                                    break; 
+                                    #endregion
                             }
                         }
                         else
@@ -182,6 +200,7 @@ namespace Cliente
                  */
             }
         }
+        
         private void textBlock_nomeUtilizador_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             UserProfile userProfile = new UserProfile((uint)Session.userID);
@@ -231,9 +250,10 @@ namespace Cliente
             //Termina a sessão do cliente e mostra a janela de login
             if (Session.Client != null)
             {
+                IsSignOut = true;
+                UserManagement.FlushUsers();
                 Session.CloseTCPSession();
                 Session.loginReference.Show();
-                IsSignOut = true;
                 this.Close();
             }
         }
