@@ -1,6 +1,5 @@
 ﻿using Core;
 using EI.SI;
-using Microsoft.JScript;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -22,17 +21,14 @@ namespace Cliente
         {
             InitializeComponent();
 
-            // Pedir lista de utilizadores ativos
-
             // Preencher elementos do UI
             textBlock_nomeUtilizador.Text = Session.username;
-            // TODO: Ao longo do carregamento das informações do servidor, este campo deve ser alterado
-            Basic_Packet requestUserOn = new Basic_Packet();
-            requestUserOn.Type = PacketType.USER_LIST_REQUEST;
 
-            requestUserOn.Contents = null;
-
-            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(requestUserOn)));
+            // Pedir dados de utilizadores
+            Basic_Packet reequestOnlineUsers = new Basic_Packet();
+            reequestOnlineUsers.Type = PacketType.USER_LIST_REQUEST;
+            reequestOnlineUsers.Contents = null;
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(reequestOnlineUsers)));
             Session.networkStream.Write(dados, 0, dados.Length);
 
             // Esperar e ler os dados enviados pelo servidor. Caso existam utilizadores online são mostrados na textBlock_listaUtilizadores
@@ -44,36 +40,38 @@ namespace Cliente
             }
 
             Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
-
             List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
             foreach (var user in packets)
             {
                 UserManagement.AddUser(user.userID, user.username, user.userImage);
-                textBlock_listaUtilizadores.Text += user.username + " ";
             }
+            desenharListaUtilizadores();
 
             // Aplicar imagem do utilizador atual
             userImage.ImageSource = Utilities.getImage(Session.userImage);
 
             // Adição de notificação de entrada
-            ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
+            ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat");
             messagePanel.Children.Add(joinNotification);
 
+            // Iniciar thread para tratar dos dados a receber
             threadMensagens = new Thread(CarregarMensagens);
-            threadMensagens.SetApartmentState(ApartmentState.STA);
+            threadMensagens.SetApartmentState(ApartmentState.STA); // STA porque vamos pedir para mexer em elementos do UI
             threadMensagens.Start();
         }
+
         private void adicionarMensagemCliente(string mensagem)
         {
             if (String.IsNullOrWhiteSpace(mensagem))
                 return;
+
             Basic_Packet pacote = new Basic_Packet();
             Message_Packet message = new Message_Packet();
             pacote.Type = PacketType.MESSAGE;
-            message.message = textBox_mensagem.Text;
+            message.message = mensagem;
             message.userID = (uint)Session.userID;
             pacote.Contents = message;
-            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA,Cryptography.AESEncrypt(Session.aes,JsonConvert.SerializeObject(pacote)));
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
 
             Session.networkStream.Write(dados, 0, dados.Length);
             Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
@@ -81,75 +79,107 @@ namespace Cliente
             ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
             messagePanel.Children.Add(clientMessageControl);
         }
-        //Funçao ----
+
+        private void desenharListaUtilizadores()
+        {
+            textBlock_listaUtilizadores.Text = ""; // Limpar
+            string userString = "";
+            foreach (UserInfo user in UserManagement.users)
+            {
+                userString += user.username + ", ";
+            }
+            textBlock_listaUtilizadores.Text = userString.Substring(0, userString.Length - 2); // Aplicar a string criada menos a última virgula e espaço
+        }
+
         private void CarregarMensagens()
         {
             try
             {
-                while (protocolSI.GetCmdType() != ProtocolSICmdType.EOT) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.EOT)
                 {
-                    if (protocolSI.GetCmdType()==ProtocolSICmdType.SYM_CIPHER_DATA)
+                    // Thread kill switch (?)
+                    if (IsSignOut)
+                        break;
+
+
+                    if (protocolSI.GetCmdType() == ProtocolSICmdType.SYM_CIPHER_DATA)
                     {
                         int bytesRead = Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-
                         byte[] ack;
 
-                        //obter os dados para a estrutura
-                        Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
-                        // Enviar o ack
-                        ack = protocolSI.Make(ProtocolSICmdType.ACK);
-                        Session.networkStream.Write(ack, 0, ack.Length);
-                        //Verificar qual o tipo de pedido
-                        switch (dados.Type)
+                        /**
+                         * Por algum motivo que não me é aparente, o thread não termina
+                         * a tempo de não ler mais uma vez o buffer. Essa leitura devolve
+                         * sempre 0 porque não há nada no buffer e byte 0 é 0.
+                         */
+                        if (protocolSI.GetStringFromData() != "0")
                         {
-                            //Saber qual o user que entrou no chat
-                            case PacketType.USER_JOINED:
-                                //Adicionar á lista os utilizadores que estão online
-                                //Verificar se existem dados
-                                if (dados.Contents != null)
-                                {
-                                    
-                                    UserJoined_Packet request_user_joined = JsonConvert.DeserializeObject<UserJoined_Packet>(dados.Contents.ToString());
-                                    textBlock_listaUtilizadores.Dispatcher.Invoke (() =>
+                            //obter os dados para a estrutura
+                            Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
+                            // Enviar o ack
+                            ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                            Session.networkStream.Write(ack, 0, ack.Length);
+                            //Verificar qual o tipo de pedido
+                            switch (dados.Type)
+                            {
+                                //Saber qual o user que entrou no chat
+                                case PacketType.USER_JOINED:
+                                    //Adicionar á lista os utilizadores que estão online
+                                    //Verificar se existem dados
+                                    if (dados.Contents != null)
                                     {
-                                        UserManagement.AddUser((uint)request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
-                                        ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
-                                        messagePanel.Children.Add(joinNotification);
-                                        textBlock_listaUtilizadores.Text += " " + request_user_joined.username;
-                                    });
-                                
-                                    
-
-                                }
-                                break;
-                            //Saber qual o user saiu do chat
-                            //Verificar se existem dados
-                            case PacketType.USER_LEFT:
-                                //Remover da lista os utilizadores que sairem
-                                if (dados.Contents != null)
-                                {
-                                    textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
-                                    {
-                                        ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername((uint)dados.Contents) + " saiu do chat!"); // TODO: trocar para mostrar apenas quando ligação for efetuada com sucesso
-                                        messagePanel.Children.Add(joinNotification);
-
-                                        UserManagement.RemoveUser((uint)dados.Contents);
-                                        foreach (var user in UserManagement.users)
+                                        UserJoined_Packet request_user_joined = JsonConvert.DeserializeObject<UserJoined_Packet>(dados.Contents.ToString());
+                                        textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
                                         {
-                                            textBlock_listaUtilizadores.Text += user.username + " ";
-                                        }
-                                    });         
-                                }
-                                break;
+                                            UserManagement.AddUser(request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
+                                            ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!");
+                                            messagePanel.Children.Add(joinNotification);
+                                            desenharListaUtilizadores();
+                                        });
+                                    }
+                                    break;
 
+                                //Saber qual o user saiu do chat
+                                //Verificar se existem dados
+                                case PacketType.USER_LEFT:
+                                    //Remover da lista os utilizadores que sairem
+                                    if (dados.Contents != null)
+                                    {
+                                        textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
+                                        {
+                                            try
+                                            {
+                                                uint context_user = uint.Parse(dados.Contents.ToString()); // Por algum motivo ele não aceita fazer o cast direto de object para uint
+
+                                                ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername(context_user) + " saiu do chat!");
+                                                messagePanel.Children.Add(joinNotification);
+                                                UserManagement.RemoveUser(context_user);
+                                                desenharListaUtilizadores();
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                MessageBox.Show(ex.Message + "\n" + dados.Contents.ToString());
+                                            }
+                                        });
+                                    }
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            break; // Quando aqui chegar a execução já devia estar mais que parada. Isto é só uma ajuda.
                         }
                     }
                 }
-                
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message, "Erro thread", MessageBoxButton.OK, MessageBoxImage.Error);
+                /**
+                 * Coisas a fazer aqui:
+                 *  - Tentar enviar EOT para terminar aplicação; ou
+                 *  - Simplesmente forçar saída
+                 */
             }
         }
         private void textBlock_nomeUtilizador_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)

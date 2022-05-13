@@ -396,7 +396,7 @@ namespace Servidor
 
                     Basic_Packet saida_utilizador = new Basic_Packet();
                     saida_utilizador.Type = PacketType.USER_LEFT;
-                    saida_utilizador.Contents = userID;
+                    saida_utilizador.Contents = (uint)userID;
 
                     /**
                      * O utilizador atual já foi removido da lista de utilizadores ativos
