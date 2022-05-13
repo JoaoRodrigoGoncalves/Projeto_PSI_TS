@@ -78,7 +78,7 @@ namespace Cliente
                         //resposta_login.userid -> uint? (Unsigned Int nullable): id do utilizador
                         //resposta_login.userImage; // String: imagem do utilizador em base64 (quando não tem imagem é null)
                         Session.userID = resposta_login.userID;
-                        Session.username = textBox_nomeUtilizador.Text;
+                        Session.username = resposta_login.username;
                         Session.userImage = resposta_login.userImage;
 
                         // Limpeza de caixas de texto para caso o utilizador termine sessão

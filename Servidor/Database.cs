@@ -118,7 +118,7 @@ namespace Servidor
 
                 // TODO: Processar password
 
-                cmd.CommandText = "SELECT ID, userImage FROM Utilizadores WHERE Username=@Username AND Password=@Password LIMIT 1;";
+                cmd.CommandText = "SELECT ID, Username, userImage FROM Utilizadores WHERE BINARY Username=@Username AND BINARY Password=@Password LIMIT 1;";
                 cmd.Parameters.AddWithValue("@Username", username);
                 cmd.Parameters.AddWithValue("@Password", password);
 
@@ -129,7 +129,7 @@ namespace Servidor
                     if (data.Read())
                     {
                         client.userID = (uint)data["ID"];
-                        client.username = username;
+                        client.username = data["Username"].ToString();
                         if (String.IsNullOrWhiteSpace(data["userImage"].ToString()))
                         {
                             client.userImage = null;
@@ -328,6 +328,65 @@ namespace Servidor
                     cmd.Connection.Close();
             }
             return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="userID"></param>
+        /// <returns></returns>
+        internal static ClientInfo GetUserData(uint userID)
+        {
+            MySqlCommand cmd = null;
+            ClientInfo client = new ClientInfo();
+
+            try
+            {
+                cmd = new MySqlCommand();
+                Database db = new Database();
+                cmd.Connection = db.ConnectToDatabase();
+
+                cmd.CommandText = "SELECT Username, userImage FROM Utilizadores WHERE ID=@UserID LIMIT 1;";
+                cmd.Parameters.AddWithValue("@UserID", userID);
+
+                MySqlDataReader data = cmd.ExecuteReader();
+
+                if (data.HasRows) // Se existe um registo
+                {
+                    if (data.Read())
+                    {
+                        client.userID = userID;
+                        client.username = data["Username"].ToString();
+                        if (String.IsNullOrWhiteSpace(data["userImage"].ToString()))
+                        {
+                            client.userImage = null;
+                        }
+                        else
+                        {
+                            client.userImage = Convert.ToUInt32(data["userImage"]);
+                        }
+                        data.Close();
+                        cmd.Connection.Close();
+                        return client;
+                    }
+                }
+                else
+                {
+                    data.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log("Ocorreu um erro ao tentar obter os dados do utilizador " + userID + ": " + ex.Message);
+                if (ex.InnerException != null)
+                    Logger.LogQuietly(ex.InnerException.StackTrace);
+            }
+            finally
+            {
+                if (cmd.Connection != null)
+                    cmd.Connection.Close();
+            }
+            return null;
         }
     }
 }

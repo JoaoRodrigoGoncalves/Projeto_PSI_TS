@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Core
 {
@@ -26,7 +27,7 @@ namespace Core
 
         /// <summary>
         /// <para>Conteúdos a enviar.</para>
-        /// <para>Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistoryItem_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.</para>
+        /// <para>Deve enviar-se <see cref="UserJoined_Packet"/>, <see cref="Message_Packet"/>, <see cref="UserListItem_Packet"/>, <see cref="UserMessageHistory_Packet"/>, <see cref="Auth_Response_Packet"/> e <see cref="Register_Response_Packet"/>.</para>
         /// <para>Para enviar a informação de saída de um utilizador do chat, colocar apenas a <see cref="uint"/> desse utilizador.</para>
         /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar deserialize do pacote todo, é tomado como String e precisa de ser deserialized individualmente</para>
         /// </summary>
@@ -58,6 +59,13 @@ namespace Core
         public uint? userImage { get; set; }
     }
 
+    public class UserMessageHistory_Packet
+    {
+        public string username { get; set; }
+        public uint? userImage { get; set; }
+        public List<UserMessageHistoryItem_Packet> messages { get; set; }
+    }
+
     public class UserMessageHistoryItem_Packet
     {
         public string message { get; set; }
@@ -69,6 +77,7 @@ namespace Core
         public bool success { get; set; }
         public string message { get; set; }
         public uint? userID { get; set; }
+        public string username { get; set; }
         public uint? userImage { get; set; }
     }
 

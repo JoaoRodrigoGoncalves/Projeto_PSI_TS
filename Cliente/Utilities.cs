@@ -8,7 +8,7 @@ namespace Cliente
     {
         internal static BitmapImage getImage(uint? userImage)
         {
-            uint?[] imgs = { 1, 2, 3, 4};
+            uint?[] imgs = { 1, 2, 3, 4 };
             if (userImage == null || !imgs.Contains(userImage))
             {
                 return new BitmapImage(new Uri("pack://application:,,,/Resources/userIcon.png"));

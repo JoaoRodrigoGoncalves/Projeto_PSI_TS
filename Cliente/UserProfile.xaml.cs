@@ -1,7 +1,6 @@
 ﻿using Core;
 using EI.SI;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -15,11 +14,6 @@ namespace Cliente
         public UserProfile(uint id)
         {
             InitializeComponent();
-
-            UserInfo user = UserManagement.GetUser(id);
-
-            textBlock_nomeUtilizador.Text = user.username; // Mostrar o nome de utilizador
-            userImage.ImageSource = Utilities.getImage(Session.userImage);// Mostra a imagem do utilizador atual
 
             Basic_Packet pedidoMensagem = new Basic_Packet();
             pedidoMensagem.Type = PacketType.MESSAGE_HISTORY_REQUEST;
@@ -38,38 +32,51 @@ namespace Cliente
 
             if (pacote.Type == PacketType.MESSAGE_HISTORY_RESPONSE)
             {
-                if (pacote.Contents == null)
+                if (pacote.Contents != null)
                 {
-                    TextBlock advertencia = new TextBlock();
-                    advertencia.Text = "Não existem mensagens!";
-                    advertencia.HorizontalAlignment = HorizontalAlignment.Center;
-                    advertencia.VerticalAlignment = VerticalAlignment.Center;
-                    advertencia.FontSize = 12;
-                    advertencia.Foreground = Brushes.Black;
-                    messagePanel.Children.Add(advertencia);
-                }
-                else
-                { 
-                    List<UserMessageHistoryItem_Packet> resposta_mensagem = JsonConvert.DeserializeObject<List<UserMessageHistoryItem_Packet>>(pacote.Contents.ToString());
+                    UserMessageHistory_Packet data = JsonConvert.DeserializeObject<UserMessageHistory_Packet>(pacote.Contents.ToString());
 
-                    foreach (UserMessageHistoryItem_Packet element in resposta_mensagem)
+                    textBlock_nomeUtilizador.Text = data.username; // Mostrar o nome de utilizador
+                    userImage.ImageSource = Utilities.getImage(data.userImage);// Mostra a imagem do utilizador atual
+
+                    // Verifica se o utilizador está online ou não
+                    if (UserManagement.GetUser(id) != null)
                     {
-                        MessageControl messageControl = new MessageControl(id, element.time, element.message, 260, true);
-                        messagePanel.Children.Add(messageControl);
+                        border_indicadorPresenca.Background = Brushes.LightGreen;// Cor do Indicador de Estado, se estiver online
+                        textBlock_UltimaOnline.Text = "Agora";// Mensagem de estado, se estiver online
+                    }
+                    else
+                    {
+                        border_indicadorPresenca.Background = Brushes.LightGray;// Cor do Indicador de Estado, se estiver offline
+
+                        if (data.messages != null)
+                            textBlock_UltimaOnline.Text = data.messages[data.messages.Count - 1].time.ToString("G");
+                    }
+
+                    if (data.messages == null)
+                    {
+                        TextBlock advertencia = new TextBlock();
+                        advertencia.Text = "Não existem mensagens!";
+                        advertencia.HorizontalAlignment = HorizontalAlignment.Center;
+                        advertencia.VerticalAlignment = VerticalAlignment.Center;
+                        advertencia.FontSize = 12;
+                        advertencia.Foreground = Brushes.Black;
+                        messagePanel.Children.Add(advertencia);
+                    }
+                    else
+                    {
+                        foreach (UserMessageHistoryItem_Packet element in data.messages)
+                        {
+                            MessageControl messageControl = new MessageControl(id, data.username, data.userImage, element.time, element.message, 260, true);
+                            messagePanel.Children.Add(messageControl);
+                        }
                     }
                 }
-            }
-
-            // Verifica se o utilizador está onlin ou não
-            if (user != null)
-            {
-                border_indicadorPresenca.Background = Brushes.LightGreen;// Cor do Indicador de Estado, se estiver online
-                textBlock_UltimaOnline.Text = "Agora";// Mensagem de estado, se estiver online
-            }
-            else
-            {
-                border_indicadorPresenca.Background = Brushes.LightGray;// Cor do Indicador de Estado, se estiver offline
-                // Mensagem de estado, se estiver online
+                else
+                {
+                    // Erro. O pacote não trouxe nada
+                    MessageBox.Show("Erro: Conteúdo do pacote vazio");
+                }
             }
         }
     }

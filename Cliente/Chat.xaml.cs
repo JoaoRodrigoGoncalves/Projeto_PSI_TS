@@ -124,16 +124,17 @@ namespace Cliente
                             {
                                 #region MESSAGE
                                 case PacketType.MESSAGE:
-                                    if(dados.Contents != null)
+                                    if (dados.Contents != null)
                                     {
                                         messagePanel.Dispatcher.Invoke(() =>
                                         {
                                             Message_Packet msg = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
-                                            MessageControl message = new MessageControl(msg.userID, msg.time, msg.message);
+                                            UserInfo sender = UserManagement.GetUser(msg.userID);
+                                            MessageControl message = new MessageControl(sender.userID, sender.username, sender.userImage, msg.time, msg.message);
                                             messagePanel.Children.Add(message);
                                         });
                                     }
-                                    break; 
+                                    break;
                                 #endregion
 
                                 //Saber qual o user que entrou no chat
@@ -179,7 +180,7 @@ namespace Cliente
                                             }
                                         });
                                     }
-                                    break; 
+                                    break;
                                     #endregion
                             }
                         }
@@ -190,6 +191,7 @@ namespace Cliente
                     }
                 }
             }
+            catch (ObjectDisposedException) { /* Temp fix tentativa de aceder à stream depois dela ter sido fichada */ }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Erro thread", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -200,7 +202,7 @@ namespace Cliente
                  */
             }
         }
-        
+
         private void textBlock_nomeUtilizador_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
             UserProfile userProfile = new UserProfile((uint)Session.userID);

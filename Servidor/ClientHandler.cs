@@ -128,18 +128,25 @@ namespace Servidor
                                         {
                                             if (Database.UserExists(requested_user_id))
                                             {
+                                                Database.ClientInfo requested_user_info = Database.GetUserData(requested_user_id);
                                                 List<UserMessageHistoryItem_Packet> messageHistory = Database.GetMessageHistory(requested_user_id);
 
                                                 Basic_Packet messageHistory_response_packet = new Basic_Packet();
                                                 messageHistory_response_packet.Type = PacketType.MESSAGE_HISTORY_RESPONSE;
+
+                                                UserMessageHistory_Packet dataPacket = new UserMessageHistory_Packet();
+
+                                                dataPacket.username = requested_user_info.username;
+                                                dataPacket.userImage = requested_user_info.userImage;
                                                 if (messageHistory.Count > 0)
                                                 {
-                                                    messageHistory_response_packet.Contents = messageHistory;
+                                                    dataPacket.messages = messageHistory;
                                                 }
                                                 else
                                                 {
-                                                    messageHistory_response_packet.Contents = null;
+                                                    dataPacket.messages = null;
                                                 }
+                                                messageHistory_response_packet.Contents = dataPacket;
 
                                                 byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(messageHistory_response_packet)));
                                                 networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
@@ -181,7 +188,7 @@ namespace Servidor
                                             if (Database.LogUserIn(auth_request.username, auth_request.password, out Database.ClientInfo dados_cliente, out string errorMessage))
                                             {
 
-                                                if (UserManagement.GetUser((uint)dados_cliente.userID) == null)
+                                                if (UserManagement.GetUser(dados_cliente.userID) == null)
                                                 {
                                                     userID = dados_cliente.userID; // Só podemos dar userID à sessão depois de establecer que não é uma dupla ligação
                                                     Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
@@ -192,6 +199,7 @@ namespace Servidor
                                                     // Preencher dados de resposta
                                                     auth.success = true;
                                                     auth.userID = userID;
+                                                    auth.username = dados_cliente.username;
                                                     auth.userImage = dados_cliente.userImage;
                                                     auth.message = null;
 

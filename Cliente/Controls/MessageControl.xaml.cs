@@ -1,5 +1,4 @@
-﻿using Core;
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -13,13 +12,11 @@ namespace Cliente
         private bool profileLocked = false;
         private uint userID;
 
-        public MessageControl(uint userID, DateTime messageDateTime, string message, int? maxWidth = null, bool blockProfile = false)
+        public MessageControl(uint userID, string name, uint? userImage, DateTime messageDateTime, string message, int? maxWidth = null, bool blockProfile = false)
         {
             InitializeComponent();
-            UserInfo currentUser = UserManagement.GetUser(userID);
-
-            this.textBlock_nomeUtilizador.Text = currentUser.username;
-            this.image_ImagemUtilizador.Source = Utilities.getImage(currentUser.userImage);
+            this.textBlock_nomeUtilizador.Text = name;
+            this.image_ImagemUtilizador.Source = Utilities.getImage(userImage);
             this.textBlock_timestamp.Text = messageDateTime.ToString("G");
             this.textBlock_mensagem.Text = message;
             this.userID = userID;
