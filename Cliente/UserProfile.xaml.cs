@@ -18,16 +18,8 @@ namespace Cliente
 
             UserInfo user = UserManagement.GetUser(id);
 
-            if (user != null)
-            {
-                border_indicadorPresenca.Background = Brushes.Green;// Cor do Indicador de Estado, se estiver online
-            }
-            else
-            {
-                border_indicadorPresenca.Background = Brushes.LightGray;// Cor do Indicador de Estado, se estiver offline
-            }
-
             textBlock_nomeUtilizador.Text = user.username; // Mostrar o nome de utilizador
+            userImage.ImageSource = Utilities.getImage(Session.userImage);// Mostra a imagem do utilizador atual
 
             Basic_Packet pedidoMensagem = new Basic_Packet();
             pedidoMensagem.Type = PacketType.MESSAGE_HISTORY_REQUEST;
@@ -57,7 +49,7 @@ namespace Cliente
                     messagePanel.Children.Add(advertencia);
                 }
                 else
-                {
+                { 
                     List<UserMessageHistoryItem_Packet> resposta_mensagem = JsonConvert.DeserializeObject<List<UserMessageHistoryItem_Packet>>(pacote.Contents.ToString());
 
                     foreach (UserMessageHistoryItem_Packet element in resposta_mensagem)
@@ -66,6 +58,18 @@ namespace Cliente
                         messagePanel.Children.Add(messageControl);
                     }
                 }
+            }
+
+            // Verifica se o utilizador está onlin ou não
+            if (user != null)
+            {
+                border_indicadorPresenca.Background = Brushes.LightGreen;// Cor do Indicador de Estado, se estiver online
+                textBlock_UltimaOnline.Text = "Agora";// Mensagem de estado, se estiver online
+            }
+            else
+            {
+                border_indicadorPresenca.Background = Brushes.LightGray;// Cor do Indicador de Estado, se estiver offline
+                // Mensagem de estado, se estiver online
             }
         }
     }
