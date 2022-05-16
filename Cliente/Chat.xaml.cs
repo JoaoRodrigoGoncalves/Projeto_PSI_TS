@@ -76,8 +76,6 @@ namespace Cliente
 
             Session.networkStream.Write(dados, 0, dados.Length);
 
-            //Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); Temp Fix (?) (Supostamente ler ACK)
-
             ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
             messagePanel.Children.Add(clientMessageControl);
         }
