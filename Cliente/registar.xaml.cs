@@ -62,6 +62,7 @@ namespace Cliente
                         registo.userImage = imageProfile;
 
                         pedidoRegisto.Contents = registo;
+                        pedidoRegisto.Signature = Cryptography.converterDadosNumaAssinatura(registo);
 
                         byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pedidoRegisto)));
                         Session.networkStream.Write(dados, 0, dados.Length);
@@ -71,8 +72,15 @@ namespace Cliente
                         {
                             Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                         }
+                        //----------------------------------
+                        string json = Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData());
 
-                        Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
+                        Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(json);
+
+                        /*if (!Cryptography.validarAssinatura(, json, pacote.Signature))
+                        {
+                            
+                        }*/
 
                         if (pacote.Type == PacketType.REGISTER_RESPONSE)
                         {

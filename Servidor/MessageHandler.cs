@@ -12,7 +12,7 @@ namespace Servidor
         /// <param name="message">Mensagem a passar ao <see cref="ProtocolSI"/></param>
         /// <param name="excludedUser">ID do utilizador a excluir do broadcast</param>
         public static void BroadcastMessage(string message, uint? excludedUser = null)
-        {
+        {   
             ProtocolSI SI = new ProtocolSI();
 
             byte[] data = SI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, message));

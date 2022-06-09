@@ -18,6 +18,12 @@ namespace Core
         REGISTER_RESPONSE
     }
 
+    public class Secret_Key_Packet
+    {
+        public string secret_key {get; set;}
+        public byte[] signature { get; set; }
+    }
+
     /// <summary>
     /// Pacote base que encapsula o tipo de informação a ser pedida/enviada e os dados relativos a essa informação
     /// </summary>
@@ -32,6 +38,7 @@ namespace Core
         /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar deserialize do pacote todo, é tomado como String e precisa de ser deserialized individualmente</para>
         /// </summary>
         public object Contents { get; set; }
+        public byte[] Signature { get; set; }
     }
 
     /// <summary>

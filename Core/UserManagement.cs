@@ -19,9 +19,9 @@ namespace Core
         /// <summary>
         /// [SERVER-SIDE] Adiciona um utilizador à lista de utilizadores
         /// </summary>
-        public static void AddUser(uint userID, string username, uint? userImage, NetworkStream userStream)
+        public static void AddUser(uint userID, string username, uint? userImage, NetworkStream userStream, byte[] publicKey)
         {
-            UserInfo newUser = new UserInfo(userID, username, userImage, userStream);
+            UserInfo newUser = new UserInfo(userID, username, userImage, userStream, publicKey);
             users.Add(newUser);
         }
 
@@ -69,6 +69,7 @@ namespace Core
         public string username { get; }
         public uint? userImage { get; }
         public NetworkStream userStream { get; }
+        public byte[] publicKey { get; } 
 
         /// <summary>
         /// [CLIENT-SIDE] Cria um objeto de utilizador
@@ -84,12 +85,13 @@ namespace Core
         /// <summary>
         /// [SERVER-SIDE] Cria um objeto de utilizador
         /// </summary>
-        public UserInfo(uint userID, string username, uint? userImage, NetworkStream stream)
+        public UserInfo(uint userID, string username, uint? userImage, NetworkStream stream, byte[] key)
         {
             this.userID = userID;
             this.username = username;
             this.userImage = userImage;
             this.userStream = stream;
+            this.publicKey = key;
         }
     }
 }

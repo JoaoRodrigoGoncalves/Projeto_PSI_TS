@@ -3,6 +3,8 @@ using EI.SI;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Windows;
 
@@ -26,9 +28,13 @@ namespace Cliente
 
             // Pedir dados de utilizadores
             Basic_Packet reequestOnlineUsers = new Basic_Packet();
+
             reequestOnlineUsers.Type = PacketType.USER_LIST_REQUEST;
             reequestOnlineUsers.Contents = null;
+            reequestOnlineUsers.Signature = Cryptography.converterDadosNumaAssinatura(null);
+           
             byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(reequestOnlineUsers)));
+
             Session.networkStream.Write(dados, 0, dados.Length);
 
             // Esperar e ler os dados enviados pelo servidor. Caso existam utilizadores online são mostrados na textBlock_listaUtilizadores
@@ -38,7 +44,7 @@ namespace Cliente
             {
                 Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
             }
-
+            //-----------------------------------------
             Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
             List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
             foreach (var user in packets)
@@ -60,25 +66,29 @@ namespace Cliente
             threadMensagens.Start();
         }
 
-        private void adicionarMensagemCliente(string mensagem)
+        private void adicionarMensagemCliente()
         {
-            if (String.IsNullOrWhiteSpace(mensagem))
+            if (String.IsNullOrWhiteSpace(textBox_mensagem.Text)){
                 return;
+            }
 
             Basic_Packet pacote = new Basic_Packet();
             Message_Packet message = new Message_Packet();
             pacote.Type = PacketType.MESSAGE;
-            message.message = mensagem;
+            message.message = textBox_mensagem.Text;
             message.time = DateTime.Now;
             message.userID = (uint)Session.userID;
             pacote.Contents = message;
-            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
+            pacote.Signature = Cryptography.converterDadosNumaAssinatura(message);
 
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
+            
             Session.networkStream.Write(dados, 0, dados.Length);
 
-            ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
+            ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, textBox_mensagem.Text);
             messagePanel.Children.Add(clientMessageControl);
         }
+
 
         private void desenharListaUtilizadores()
         {
@@ -110,6 +120,7 @@ namespace Cliente
                          * a tempo de não ler mais uma vez o buffer. Essa leitura devolve
                          * sempre 0 porque não há nada no buffer e byte 0 é 0.
                          */
+                        //-----------------------------------------------------------------------
                         if (protocolSI.GetStringFromData() != "0")
                         {
                             //obter os dados para a estrutura
@@ -221,16 +232,21 @@ namespace Cliente
 
         private void button_enviarMensagem_Click(object sender, RoutedEventArgs e)
         {
-            adicionarMensagemCliente(textBox_mensagem.Text);
+            adicionarMensagemCliente();
             textBox_mensagem.Clear();
             messagePanelScroll.ScrollToEnd(); // Exclusivo para quando a mensagem é do cliente atual
+        }
+
+        private void assinarMensagem()
+        {
+            
         }
 
         private void textBox_mensagem_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == System.Windows.Input.Key.Enter)
             {
-                adicionarMensagemCliente(textBox_mensagem.Text);
+                adicionarMensagemCliente();
                 textBox_mensagem.Clear();
                 messagePanelScroll.ScrollToEnd(); // Exclusivo para quando a mensagem é do cliente atual
             }

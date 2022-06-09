@@ -43,17 +43,53 @@ namespace Servidor
                     {
                         case ProtocolSICmdType.PUBLIC_KEY:
                             clientPublicKey = Convert.FromBase64String(protocolSI.GetStringFromData()); //Obter os bytes da string base64
-                            ack = protocolSI.Make(ProtocolSICmdType.ACK);
-                            networkStream.Write(ack, 0, ack.Length);
 
-                            byte[] pubKey_response = protocolSI.Make(ProtocolSICmdType.SECRET_KEY, Cryptography.publicKeyEncrypt(clientPublicKey, ServerSideCryptography.getAESSecret()));
-                            networkStream.Write(pubKey_response, 0, pubKey_response.Length);
+                            byte[] send_ServerPublicKey = protocolSI.Make(ProtocolSICmdType.PUBLIC_KEY, Convert.ToBase64String(Cryptography.getPublicKey()));
+                            networkStream.Write(send_ServerPublicKey, 0, send_ServerPublicKey.Length);
 
+                            // esperar por ack/nack
+                            networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                            if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                            { // Enquanto não receber ACK
+                                
+                                // criar estrutura personalizada para enviar password secreta e assinatura da mesma
+                                Secret_Key_Packet chave = new Secret_Key_Packet();
+                                chave.secret_key = ServerSideCryptography.getAESSecret();
+                                chave.signature = Cryptography.converterDadosNumaAssinatura(ServerSideCryptography.getAESSecret());
+
+                                byte[] secret_key = protocolSI.Make(ProtocolSICmdType.SECRET_KEY, Cryptography.publicKeyEncrypt(clientPublicKey, JsonConvert.SerializeObject(chave)));
+                                networkStream.Write(secret_key, 0, secret_key.Length);
+
+                                networkStream.Read(secret_key, 0, secret_key.Length);
+
+                                /*if (protocolSI.GetCmdType() != ProtocolSICmdType.ACK)
+                                {
+                                    byte[] end = protocolSI.Make(ProtocolSICmdType.EOT);
+                                    networkStream.Write(end, 0, end.Length);
+                                    Logger.Log("Erro! O Cliente não aceitou a palavra - passe!");
+                                }
+                                else
+                                {
+                                    Logger.Log("Erro! Durante a troca de chaves!");
+                                }*/
+                            }
                             break;
 
                         case ProtocolSICmdType.SYM_CIPHER_DATA:
+
+                            string json = Cryptography.AESDecrypt(ServerSideCryptography.aes, protocolSI.GetStringFromData());
+
                             //Obter os dados para a estrutura antes de enviar o ack
-                            Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(ServerSideCryptography.aes, protocolSI.GetStringFromData()));
+                            Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(json);
+
+                            if (!Cryptography.validarAssinatura(clientPublicKey, json, dados.Signature))
+                            {
+                                ack = protocolSI.Make(ProtocolSICmdType.NACK);
+                                networkStream.Write(ack, 0, ack.Length);
+
+                                break;
+                            }
+
                             // Enviar o ack
                             ack = protocolSI.Make(ProtocolSICmdType.ACK);
                             networkStream.Write(ack, 0, ack.Length);
@@ -75,6 +111,7 @@ namespace Servidor
                                          */
                                         mensagem.userID = (uint)userID;
                                         dados.Contents = mensagem;
+                                        dados.Signature = Cryptography.converterDadosNumaAssinatura(mensagem);
 
 
                                         Logger.Log(String.Format("<{0}> {1}", UserManagement.GetUsername(mensagem.userID), mensagem.message));
@@ -110,6 +147,7 @@ namespace Servidor
                                     }
 
                                     user_list_response_packet.Contents = user_list;
+                                    user_list_response_packet.Signature = Cryptography.converterDadosNumaAssinatura(user_list);
 
                                     string sentUserData = JsonConvert.SerializeObject(user_list_response_packet);
                                     byte[] userList_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, sentUserData));
@@ -147,6 +185,7 @@ namespace Servidor
                                                     dataPacket.messages = null;
                                                 }
                                                 messageHistory_response_packet.Contents = dataPacket;
+                                                messageHistory_response_packet.Signature = Cryptography.converterDadosNumaAssinatura(dataPacket);
 
                                                 byte[] messageHistory_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(messageHistory_response_packet)));
                                                 networkStream.Write(messageHistory_byte_response, 0, messageHistory_byte_response.Length);
@@ -194,7 +233,7 @@ namespace Servidor
                                                     Logger.Log(String.Format("Cliente {0} ({1}) juntou-se!", dados_cliente.username, userID));
 
                                                     // Adicionar à lista de utilizadores
-                                                    UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.userImage, networkStream);
+                                                    UserManagement.AddUser((uint)userID, dados_cliente.username, dados_cliente.userImage, networkStream, clientPublicKey);
 
                                                     // Preencher dados de resposta
                                                     auth.success = true;
@@ -214,6 +253,7 @@ namespace Servidor
                                                         join.username = dados_cliente.username;
                                                         join.userImage = dados_cliente.userImage;
                                                         user_join.Contents = join;
+                                                        user_join.Signature = Cryptography.converterDadosNumaAssinatura(join);
 
                                                         // Emitr mensagem para todos os utilizadores, excepto o atual
                                                         MessageHandler.BroadcastMessage(JsonConvert.SerializeObject(user_join), userID);
@@ -239,6 +279,7 @@ namespace Servidor
                                             }
 
                                             auth_response.Contents = auth;
+                                            auth_response.Signature = Cryptography.converterDadosNumaAssinatura(auth);
                                             byte[] auth_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(auth_response)));
                                             networkStream.Write(auth_byte_response, 0, auth_byte_response.Length);
                                         }
@@ -309,6 +350,7 @@ namespace Servidor
                                         }
 
                                         register_response.Contents = register;
+                                        register_response.Signature = Cryptography.converterDadosNumaAssinatura(register);
 
                                         byte[] register_byte_response = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(ServerSideCryptography.aes, JsonConvert.SerializeObject(register_response)));
                                         networkStream.Write(register_byte_response, 0, register_byte_response.Length);
@@ -373,9 +415,9 @@ namespace Servidor
                         userDisconnectHandler();
                     }
                 }
+                networkStream.Close();
+                client.Close();
             }
-            networkStream.Close();
-            client.Close();
         }
 
         /// <summary>
@@ -398,6 +440,7 @@ namespace Servidor
                     Basic_Packet saida_utilizador = new Basic_Packet();
                     saida_utilizador.Type = PacketType.USER_LEFT;
                     saida_utilizador.Contents = (uint)userID;
+                    saida_utilizador.Signature = Cryptography.converterDadosNumaAssinatura((uint)userID);
 
                     /**
                      * O utilizador atual já foi removido da lista de utilizadores ativos

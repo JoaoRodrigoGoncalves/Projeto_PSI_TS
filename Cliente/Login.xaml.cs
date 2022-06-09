@@ -46,6 +46,7 @@ namespace Cliente
                 login.password = textBox_palavraPasse.Password;
 
                 pedidoLogin.Contents = login;
+                pedidoLogin.Signature = Cryptography.converterDadosNumaAssinatura(login);
 
                 byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pedidoLogin)));
                 Session.networkStream.Write(dados, 0, dados.Length);
@@ -62,6 +63,7 @@ namespace Cliente
                     Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
                 }
 
+                //-------------------------------------------
                 Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
 
                 /**

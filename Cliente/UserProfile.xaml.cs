@@ -16,8 +16,10 @@ namespace Cliente
             InitializeComponent();
 
             Basic_Packet pedidoMensagem = new Basic_Packet();
+
             pedidoMensagem.Type = PacketType.MESSAGE_HISTORY_REQUEST;
             pedidoMensagem.Contents = id;
+            pedidoMensagem.Signature = Cryptography.converterDadosNumaAssinatura(id);
 
             byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pedidoMensagem)));
             Session.networkStream.Write(dados, 0, dados.Length);
@@ -28,6 +30,7 @@ namespace Cliente
                 Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
             }
 
+            // ----------------------------------------------------
             Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
 
             if (pacote.Type == PacketType.MESSAGE_HISTORY_RESPONSE)

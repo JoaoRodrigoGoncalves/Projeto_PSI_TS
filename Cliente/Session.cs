@@ -1,5 +1,6 @@
 ﻿using Core;
 using EI.SI;
+using Newtonsoft.Json;
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -16,6 +17,7 @@ namespace Cliente
         internal static uint? userID = null;
         internal static string username = null;
         internal static uint? userImage = null;
+        internal static byte[] serverPublicKey = null;
         internal static Login loginReference = null; // Utilizado para poder terminar sessão e poder regressar à janela de login inicial
         internal static AesCryptoServiceProvider aes = null;
 
@@ -35,23 +37,36 @@ namespace Cliente
                     // Enviar public key
                     Cryptography.generateKeys();
                     byte[] sendPubKey = protocolSI.Make(ProtocolSICmdType.PUBLIC_KEY, Convert.ToBase64String(Cryptography.getPublicKey()));
-                    networkStream.Write(sendPubKey, 0, sendPubKey.Length);
+                    networkStream.Write(sendPubKey, 0, sendPubKey.Length); 
+                    
+                    //Receber public_key
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                    serverPublicKey = Convert.FromBase64String(protocolSI.GetStringFromData());
 
+                    // Enviar um ack
+                    byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                    networkStream.Write(ack, 0, ack.Length);
+
+                    
+                    // Receber secret_key
                     networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
 
-                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
+                    string json = Encoding.UTF8.GetString(Cryptography.privateKeyDecrypt(protocolSI.GetStringFromData()));
+                    // Obtem uma string json que contem um objeto da classe SECRET_KEY_PACKET     
+
+                    Secret_Key_Packet secret_Key = JsonConvert.DeserializeObject<Secret_Key_Packet>(json);
+                    // Deserializa o objeto para a classe SECRET_KEY_PACKET
+
+                    if (Cryptography.validarAssinatura(serverPublicKey, secret_Key.secret_key, secret_Key.signature))
                     {
-                        // Receber secret_key
-                        networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
                         aes = new AesCryptoServiceProvider();
-                        string password = Encoding.UTF8.GetString(Cryptography.privateKeyDecrypt(protocolSI.GetStringFromData()));
-                        aes.IV = Cryptography.CreateIV(password);
-                        aes.Key = Cryptography.CreatePrivateKey(password);
+                        aes.IV = Cryptography.CreateIV(secret_Key.secret_key);
+                        aes.Key = Cryptography.CreatePrivateKey(secret_Key.secret_key);
                     }
                     else
                     {
                         CloseTCPSession();
-                        MessageBox.Show("Ocorreu um erro ao trocar as chaves com o servidor.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Ocorreu um erro na validação da assinatura.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
                         Application.Current.Shutdown();
                     }
                 }
