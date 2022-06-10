@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ChatApp - Servidor")]
-[assembly: AssemblyDescription("Aplicação de Servidro do grupo A do CTeSP de PSI para a UC de Tópicos de Segurança")]
+[assembly: AssemblyTitle("ChatApp - Core")]
+[assembly: AssemblyDescription("Biblioteca Core do grupo A do CTeSP de PSI para a UC de Tópicos de Segurança")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Grupo A")]
-[assembly: AssemblyProduct("Chat App")]
+[assembly: AssemblyProduct("ChatApp")]
 [assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("9d5d9c06-cbce-44ef-a497-454c6adf1c0c")]
+[assembly: Guid("856ade43-2487-43db-b205-74cd6f003e2f")]
 
 // Version information for an assembly consists of the following four values:
 //

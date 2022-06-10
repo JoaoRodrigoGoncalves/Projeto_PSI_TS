@@ -159,37 +159,49 @@
         <StackPanel>
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="4*"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                    <ColumnDefinition/>
+                    <ColumnDefinition Width="1.25*"/>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <Border BorderBrush="Black" BorderThickness="1">
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Border Width="50" Height="50" CornerRadius="80" BorderThickness="1" BorderBrush="#0be044">
+                        <Border.Background>
+                            <ImageBrush x:Name="userImage" ImageSource="/Resources/userIcon.png"/>
+                        </Border.Background>
+                    </Border>
+                    <TextBlock
+                        x:Name="textBlock_nomeUtilizador"
+                        VerticalAlignment="Center"
+                        Margin="10 0 0 0" 
+                        MouseDown="textBlock_nomeUtilizador_MouseDown" 
+                        MouseEnter="textBlock_nomeUtilizador_MouseEnter" 
+                        MouseLeave="textBlock_nomeUtilizador_MouseLeave">
+                        Utilizador 1
+                    </TextBlock>
+                </StackPanel>
+
+                <Border BorderBrush="Black" BorderThickness="1" Grid.Column="1" Margin="5 5 0 5">
                     <TextBlock
                         x:Name="textBlock_listaUtilizadores"
                         FontSize="15"
                         VerticalAlignment="Center"
                         Margin="5 0 5 0"
-                        TextTrimming="CharacterEllipsis">
-                        --- Utilizadores ---
-                    </TextBlock>
+                        TextTrimming="CharacterEllipsis"
+                        Text=""/>
                 </Border>
-                <StackPanel Grid.Column="1">
-                    <TextBlock TextAlignment="Right" FontWeight="Bold">Sessão Iniciada:</TextBlock>
-                    <TextBlock x:Name="textBlock_nomeUtilizador" TextAlignment="Right">Utilizador 1</TextBlock>
-                </StackPanel>
                 <Button
                     Style="{DynamicResource TerminarSessaoBtn}"
                     x:Name="button_terminarSessao"
-                    Margin="10.2,0,-0.4,0"
-                    Grid.Column="2">           
+                    Margin="10 5 0 5"
+                    Grid.Column="2" Click="button_terminarSessao_Click">
                     Terminar Sessão
                 </Button>
             </Grid>
-
+            
             <StackPanel>
 
-                <ScrollViewer Name="messagePanelScroll" Margin="0 10" VerticalScrollBarVisibility="Auto" Height="410" MaxHeight="410">
+                <ScrollViewer Name="messagePanelScroll" Margin="0 10" VerticalScrollBarVisibility="Auto" Height="390" MaxHeight="390">
                     <StackPanel x:Name="messagePanel"></StackPanel>
                 </ScrollViewer>
 
@@ -198,13 +210,13 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="8*"></ColumnDefinition>
                         <ColumnDefinition Width="*"></ColumnDefinition>
-                        <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
 
                     <TextBox Style="{DynamicResource MessageInput}"
                         x:Name="textBox_mensagem"
                         KeyDown="textBox_mensagem_KeyDown"
                         Padding="0 2 0 2"
+                        MaxLength="420"
                         Grid.Column="0"
                     />
 
@@ -216,8 +228,6 @@
                         Margin="5 0 5 0">
                         Enviar
                     </Button>
-                    <!-- Botão temporário para gerar uma mensagem de outro cliente -->
-                    <Button x:Name="simularCliente" Click="simularCliente_Click" Grid.Column="2">Sim. Cliente</Button>
                 </Grid>
             </StackPanel>
 
