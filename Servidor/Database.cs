@@ -1,39 +1,21 @@
 ﻿using Core;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Servidor
 {
     internal class Database
     {
+
+        private const int SALTSIZE = 10;
+        private const int NUMBER_ITERATIONS = 1200;
+
         internal class ClientInfo
         {
             public uint userID;
             public string username;
             public uint? userImage = null;
-        }
-
-        /// <summary>
-        /// Cria e devolve uma ligação à base de dados
-        /// </summary>
-        /// <returns><see cref="MySqlConnection"/></returns>
-        private MySqlConnection ConnectToDatabase()
-        {
-            MySqlConnection conn = null;
-            try
-            {
-                conn = new MySqlConnection("Server=localhost;DataBase=" + Properties.Settings.Default.Database +
-                                                           ";Uid=" + Properties.Settings.Default.DB_User +
-                                                           ";Pwd=" + Properties.Settings.Default.DB_Password);
-                conn.Open();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log("Ocorreu um erro ao ligar à base de dados: " + ex.Message);
-                Logger.LogQuietly(ex.InnerException.StackTrace);
-            }
-            return conn;
         }
 
         /// <summary>
@@ -45,40 +27,23 @@ namespace Servidor
         /// <returns>True se foi possível registar, caso contrário false</returns>
         internal static bool RegisterUser(string username, string password, uint? userImage)
         {
-            MySqlCommand cmd = null;
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             try
             {
-                cmd = new MySqlCommand();
-                Database db = new Database();
-                cmd.Connection = db.ConnectToDatabase();
 
-                // TODO: Processar Password
+                byte[] salt = ServerSideCryptography.GenerateSalt(SALTSIZE);
+                byte[] saltedPassword = ServerSideCryptography.GenerateSaltedHash(password, salt, NUMBER_ITERATIONS);
 
-                if (userImage == null)
-                {
-                    cmd.CommandText = "INSERT INTO utilizadores (Username, Password) VALUES (@Username, @Password);";
-                }
-                else
-                {
-                    cmd.CommandText = "INSERT INTO utilizadores (Username, Password, userImage) VALUES (@Username, @Password, @UserImage);";
-                    cmd.Parameters.AddWithValue("@UserImage", userImage);
-                }
+                Utilizadores user = new Utilizadores();
+                user.Username = username;
+                user.Salt = salt;
+                user.SaltedPassword = saltedPassword;
+                user.userImage = (int?)userImage;
 
-                cmd.Parameters.AddWithValue("@Username", username);
-                cmd.Parameters.AddWithValue("@Password", password);
+                chatAppEntities.Utilizadores.Add(user);
+                chatAppEntities.SaveChanges();
+                return true;
 
-                if (cmd.ExecuteNonQuery() == 1)
-                {
-                    // Uma linha foi modificada, o que sigifica que o utilizador foi adicionado.
-                    cmd.Connection.Close();
-                    return true;
-                }
-                else
-                {
-                    // O utilizador não foi adicionado.
-                    Logger.Log("O utilizador não foi registado.");
-                    Logger.LogQuietly("Query:" + cmd.CommandText);
-                }
             }
             catch (Exception ex)
             {
@@ -88,8 +53,7 @@ namespace Servidor
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
             return false;
         }
@@ -106,47 +70,34 @@ namespace Servidor
         /// <returns>True caso os dados estejam corretos, caso contrário false</returns>
         internal static bool LogUserIn(string username, string password, out ClientInfo client, out string error)
         {
-            MySqlCommand cmd = null;
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             client = new ClientInfo();
-            error = null;
+            error = "Credenciais incorretas";
 
             try
             {
-                cmd = new MySqlCommand();
-                Database db = new Database();
-                cmd.Connection = db.ConnectToDatabase();
+                Utilizadores user = chatAppEntities.Utilizadores.FirstOrDefault(x => x.Username == username);
 
-                // TODO: Processar password
+                chatAppEntities.Dispose();
 
-                cmd.CommandText = "SELECT ID, Username, userImage FROM Utilizadores WHERE BINARY Username=@Username AND BINARY Password=@Password LIMIT 1;";
-                cmd.Parameters.AddWithValue("@Username", username);
-                cmd.Parameters.AddWithValue("@Password", password);
+                if (user == null)
+                    return false;
 
-                MySqlDataReader data = cmd.ExecuteReader();
+                byte[] hash = ServerSideCryptography.GenerateSaltedHash(password, user.Salt, NUMBER_ITERATIONS);
 
-                if (data.HasRows) // Se existe um registo
+                if (user.SaltedPassword.SequenceEqual(hash)) //
                 {
-                    if (data.Read())
-                    {
-                        client.userID = (uint)data["ID"];
-                        client.username = data["Username"].ToString();
-                        if (String.IsNullOrWhiteSpace(data["userImage"].ToString()))
-                        {
-                            client.userImage = null;
-                        }
-                        else
-                        {
-                            client.userImage = Convert.ToUInt32(data["userImage"]);
-                        }
-                        data.Close();
-                        cmd.Connection.Close();
-                        return true;
-                    }
+                    // Converter objeto Utilizadores em objeto ClientInfo
+
+                    client.userID = (uint)user.ID;
+                    client.username = user.Username;
+                    client.userImage = (uint?)user.userImage;
+                    error = null;
+                    return true;
                 }
                 else
                 {
-                    data.Close();
-                    error = "Credenciais incorretas.";
+                    return false;
                 }
             }
             catch (Exception ex)
@@ -158,8 +109,7 @@ namespace Servidor
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
             return false;
         }
@@ -171,26 +121,21 @@ namespace Servidor
         /// <param name="message">O texto da mensagem</param>
         internal static void SaveUserMessage(uint userID, string message)
         {
-            MySqlCommand cmd = null;
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
 
             try
             {
-                cmd = new MySqlCommand();
-                Database db = new Database();
-                cmd.Connection = db.ConnectToDatabase();
+                Mensagens mensagem = new Mensagens();
 
-                cmd.CommandText = "INSERT INTO Mensagens (Texto, IDUtilizador) VALUES (@UserMessage, @UserID)";
-                cmd.Parameters.AddWithValue("@UserMessage", message);
-                cmd.Parameters.AddWithValue("@UserID", userID);
+                mensagem.IDUtilizador = (int)userID;
+                mensagem.dtaEnvio = DateTime.Now;
+                mensagem.Texto = message;
 
-                if (cmd.ExecuteNonQuery() == 1)
-                {
-                    return;
-                }
-                else
-                {
-                    Logger.Log("Não foi possível guardar uma mensagem.");
-                }
+                chatAppEntities.Mensagens.Add(mensagem);
+
+                chatAppEntities.SaveChanges();
+                chatAppEntities.Dispose();
+                return;
             }
             catch (Exception ex)
             {
@@ -199,8 +144,7 @@ namespace Servidor
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
         }
 
@@ -209,49 +153,31 @@ namespace Servidor
         /// </summary>
         /// <param name="userID">ID do utilizador</param>
         /// <returns>Lista com <see cref="UserMessageHistoryItem_Packet"/></returns>
-        internal static List<UserMessageHistoryItem_Packet> GetMessageHistory(uint userID)
+        internal static List<UserMessageHistoryItem_Packet> GetMessageHistory(int userID)
         {
-            Database db = new Database();
-            MySqlCommand cmd = null;
-
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             try
             {
-                cmd = new MySqlCommand();
-                cmd.Connection = db.ConnectToDatabase();
+                List<UserMessageHistoryItem_Packet> mensagem = new List<UserMessageHistoryItem_Packet>();
 
-                cmd.CommandText = "SELECT * FROM Mensagens WHERE IDUtilizador=@UserID ORDER BY ID DESC LIMIT 3;";
-                cmd.Parameters.AddWithValue("@UserID", userID);
-                MySqlDataReader reader = cmd.ExecuteReader();
-
-                if (reader.HasRows) // Verificar se existem mensagens em registo
+                foreach (Mensagens msg in chatAppEntities.Mensagens.Where(m => m.IDUtilizador == userID).Take(3))
                 {
-                    List<UserMessageHistoryItem_Packet> mensagem = new List<UserMessageHistoryItem_Packet>();
-                    while (reader.Read())
-                    {
-                        // Adicionar todas as mensagens 
-                        UserMessageHistoryItem_Packet m = new UserMessageHistoryItem_Packet();
-                        m.message = reader["Texto"].ToString();
-                        m.time = DateTime.Parse(reader["dtaEnvio"].ToString());
-                        mensagem.Add(m);
-                    }
-                    reader.Close();
-                    cmd.Connection.Close();
-                    return mensagem;
+                    UserMessageHistoryItem_Packet m = new UserMessageHistoryItem_Packet();
+                    m.message = msg.Texto;
+                    m.time = msg.dtaEnvio;
+                    mensagem.Add(m);
                 }
-                else
-                {
-                    return new List<UserMessageHistoryItem_Packet>();
-                }
+                chatAppEntities.Dispose();
+                return mensagem;
             }
             catch (Exception ex)
             {
-                Logger.Log("Não foi possível obter o histórico de mensagens do utilizador \"" + UserManagement.GetUsername(userID) + "\" (" + userID + "): " + ex.Message);
+                Logger.Log("Não foi possível obter o histórico de mensagens do utilizador \"" + UserManagement.GetUsername((uint)userID) + "\" (" + userID + "): " + ex.Message);
                 Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
             return null;
         }
@@ -261,34 +187,22 @@ namespace Servidor
         /// </summary>
         /// <param name="userID">ID do utilizador a verificar</param>
         /// <returns>True se existir, caso contrario false</returns>
-        internal static bool UserExists(uint userID)
+        internal static bool UserExists(int userID)
         {
-            Database db = new Database();
-            MySqlCommand cmd = null;
-
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             try
             {
-                cmd = new MySqlCommand();
-                cmd.Connection = db.ConnectToDatabase();
-
-                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE ID=@UserID;";
-                cmd.Parameters.AddWithValue("@UserID", userID);
-                MySqlDataReader reader = cmd.ExecuteReader();
-
-                bool exists = reader.HasRows;
-                reader.Close();
-                cmd.Connection.Close();
-                return exists;
+                return (chatAppEntities.Utilizadores.Find(userID) != null);
             }
             catch (Exception ex)
             {
                 Logger.Log("Não foi possível procurar pelo utilizador (" + userID + "): " + ex.Message);
-                Logger.LogQuietly(ex.InnerException.StackTrace);
+                if (ex.InnerException != null)
+                    Logger.LogQuietly(ex.InnerException.StackTrace);
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
             return false;
         }
@@ -300,22 +214,10 @@ namespace Servidor
         /// <returns>True se existir, caso contrario false</returns>
         internal static bool UserExists(string username)
         {
-            Database db = new Database();
-            MySqlCommand cmd = null;
-
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             try
             {
-                cmd = new MySqlCommand();
-                cmd.Connection = db.ConnectToDatabase();
-
-                cmd.CommandText = "SELECT ID FROM Utilizadores WHERE Username=@Username;";
-                cmd.Parameters.AddWithValue("@Username", username);
-                MySqlDataReader reader = cmd.ExecuteReader();
-
-                bool exists = reader.HasRows;
-                reader.Close();
-                cmd.Connection.Close();
-                return exists;
+                return (chatAppEntities.Utilizadores.FirstOrDefault(u => u.Username == username) != null);
             }
             catch (Exception ex)
             {
@@ -324,8 +226,7 @@ namespace Servidor
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                chatAppEntities.Dispose();
             }
             return false;
         }
@@ -335,44 +236,20 @@ namespace Servidor
         /// </summary>
         /// <param name="userID"></param>
         /// <returns></returns>
-        internal static ClientInfo GetUserData(uint userID)
+        internal static ClientInfo GetUserData(int userID)
         {
-            MySqlCommand cmd = null;
+            ChatAppEntities chatAppEntities = new ChatAppEntities();
             ClientInfo client = new ClientInfo();
-
             try
             {
-                cmd = new MySqlCommand();
-                Database db = new Database();
-                cmd.Connection = db.ConnectToDatabase();
-
-                cmd.CommandText = "SELECT Username, userImage FROM Utilizadores WHERE ID=@UserID LIMIT 1;";
-                cmd.Parameters.AddWithValue("@UserID", userID);
-
-                MySqlDataReader data = cmd.ExecuteReader();
-
-                if (data.HasRows) // Se existe um registo
+                Utilizadores user = chatAppEntities.Utilizadores.Find(userID);
+                chatAppEntities.Dispose();
+                if (user != null)
                 {
-                    if (data.Read())
-                    {
-                        client.userID = userID;
-                        client.username = data["Username"].ToString();
-                        if (String.IsNullOrWhiteSpace(data["userImage"].ToString()))
-                        {
-                            client.userImage = null;
-                        }
-                        else
-                        {
-                            client.userImage = Convert.ToUInt32(data["userImage"]);
-                        }
-                        data.Close();
-                        cmd.Connection.Close();
-                        return client;
-                    }
-                }
-                else
-                {
-                    data.Close();
+                    client.userID = (uint)userID;
+                    client.username = user.Username;
+                    client.userImage = (uint?)user.userImage;
+                    return client;
                 }
             }
             catch (Exception ex)
@@ -383,8 +260,8 @@ namespace Servidor
             }
             finally
             {
-                if (cmd.Connection != null)
-                    cmd.Connection.Close();
+                if (chatAppEntities != null)
+                    chatAppEntities.Dispose();
             }
             return null;
         }

@@ -37,5 +37,20 @@ namespace Servidor
 
             return new string(chars);
         }
+
+        internal static byte[] GenerateSalt(int size)
+        {
+            RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+            byte[] buff = new byte[size];
+            rng.GetBytes(buff);
+            return buff;
+        }
+
+        internal static byte[] GenerateSaltedHash(string password, byte[] salt, int interations)
+        {
+            Rfc2898DeriveBytes rfc2898 = new Rfc2898DeriveBytes(password, salt, interations);
+            return rfc2898.GetBytes(32);
+        }
+
     }
 }

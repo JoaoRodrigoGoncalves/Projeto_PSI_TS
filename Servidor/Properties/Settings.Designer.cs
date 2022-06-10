@@ -40,32 +40,5 @@ namespace Servidor.Properties {
                 return ((string)(this["listenAddress"]));
             }
         }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("ChatApp")]
-        public string Database {
-            get {
-                return ((string)(this["Database"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("root")]
-        public string DB_User {
-            get {
-                return ((string)(this["DB_User"]));
-            }
-        }
-        
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DB_Password {
-            get {
-                return ((string)(this["DB_Password"]));
-            }
-        }
     }
 }

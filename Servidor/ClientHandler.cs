@@ -124,7 +124,7 @@ namespace Servidor
 
                                     if (dados.Contents != null)
                                     {
-                                        if (uint.TryParse(dados.Contents.ToString(), out uint requested_user_id))
+                                        if (int.TryParse(dados.Contents.ToString(), out int requested_user_id))
                                         {
                                             if (Database.UserExists(requested_user_id))
                                             {
