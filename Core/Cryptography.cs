@@ -80,6 +80,11 @@ namespace Core
             return rsa.Decrypt(dados, true);
         }
 
+        /// <summary>
+        /// Converte um objeto numa assinatura
+        /// </summary>
+        /// <param name="objeto">Objeto a assinar</param>
+        /// <returns>Assinatura relativa ao objeto</returns>
         public static byte[] converterDadosNumaAssinatura(object objeto)
         {
             byte[] assinatura;
@@ -97,6 +102,13 @@ namespace Core
             return assinatura;// Retorna a assinatura
         }
 
+        /// <summary>
+        /// Valida uma assinatura
+        /// </summary>
+        /// <param name="CspBlob">Chave pública do sistema que assinou</param>
+        /// <param name="objeto">Objeto a ser utilizado na validação</param>
+        /// <param name="assinatura">Assinatura a validar</param>
+        /// <returns></returns>
         public static bool validarAssinatura(byte[] CspBlob, object objeto, byte[] assinatura)
         {
             bool verify;

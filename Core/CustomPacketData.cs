@@ -20,6 +20,11 @@ namespace Core
 
     public static class Core
     {
+        /// <summary>
+        /// Converte um tipo de pacote num tipo de dados
+        /// </summary>
+        /// <param name="type">Tipo de pacote</param>
+        /// <returns>Tipo de dados</returns>
         public static Type GetTypeFromPacketType(PacketType type)
         {
             switch(type)
