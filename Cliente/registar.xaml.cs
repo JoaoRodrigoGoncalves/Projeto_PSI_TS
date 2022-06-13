@@ -62,40 +62,55 @@ namespace Cliente
                         registo.userImage = imageProfile;
 
                         pedidoRegisto.Contents = registo;
+                        pedidoRegisto.Signature = Cryptography.converterDadosNumaAssinatura(registo);
 
                         byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pedidoRegisto)));
                         Session.networkStream.Write(dados, 0, dados.Length);
 
                         Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-                        while (protocolSI.GetCmdType() != ProtocolSICmdType.SYM_CIPHER_DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
+                        if(protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
                         {
-                            Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-                        }
-
-                        Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
-
-                        if (pacote.Type == PacketType.REGISTER_RESPONSE)
-                        {
-                            Register_Response_Packet resposta_registo = JsonConvert.DeserializeObject<Register_Response_Packet>(pacote.Contents.ToString());
-
-                            if (resposta_registo.success)// Boolean: Se o registo foi feito com sucesso
+                            while (protocolSI.GetCmdType() != ProtocolSICmdType.SYM_CIPHER_DATA) // Enquanto não receber DATA (para ignorar ACKs e outros pacotes perdidos)
                             {
-                                //Janela de Mensagem de um registo bem sucedido 
-                                string messageBoxText = "O utilizador foi registado com sucesso!";
-                                string caption = "Registo";
-                                MessageBoxButton button = MessageBoxButton.OK;
-                                MessageBoxImage icon = MessageBoxImage.Information;
-                                MessageBoxResult result;
+                                Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                            }
 
-                                result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+                            Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
 
-                                //Depois de carregar "OK", da janela de mensagem, a janela de registo é fechada 
-                                this.Close();
+                            if(Cryptography.validarAssinatura(Session.serverPublickKey, JsonConvert.DeserializeObject(pacote.Contents.ToString(), Core.Core.GetTypeFromPacketType(pacote.Type)), pacote.Signature))
+                            {
+                                if (pacote.Type == PacketType.REGISTER_RESPONSE)
+                                {
+                                    Register_Response_Packet resposta_registo = JsonConvert.DeserializeObject<Register_Response_Packet>(pacote.Contents.ToString());
+
+                                    if (resposta_registo.success)// Boolean: Se o registo foi feito com sucesso
+                                    {
+                                        //Janela de Mensagem de um registo bem sucedido 
+                                        string messageBoxText = "O utilizador foi registado com sucesso!";
+                                        string caption = "Registo";
+                                        MessageBoxButton button = MessageBoxButton.OK;
+                                        MessageBoxImage icon = MessageBoxImage.Information;
+                                        MessageBoxResult result;
+
+                                        result = MessageBox.Show(messageBoxText, caption, button, icon, MessageBoxResult.Yes);
+
+                                        //Depois de carregar "OK", da janela de mensagem, a janela de registo é fechada 
+                                        this.Close();
+                                    }
+                                    else
+                                    {
+                                        textBlock_ErrorMessage.Text = "Erro! " + resposta_registo.message; // Mostrar mensagem de erro do servidor
+                                    }
+                                }
                             }
                             else
                             {
-                                textBlock_ErrorMessage.Text = "Erro! " + resposta_registo.message; // Mostrar mensagem de erro do servidor
+                                MessageBox.Show("Assinatura de pacote inválida", "Erro assinaturas", MessageBoxButton.OK, MessageBoxImage.Error);
                             }
+                        }
+                        else
+                        {
+                            MessageBox.Show("O servidor rejeitou o pacote", "Erro assinaturas", MessageBoxButton.OK, MessageBoxImage.Error);
                         }
                     }
                     else

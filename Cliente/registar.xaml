@@ -87,21 +87,39 @@
                     <TextBlock Margin="10" FontSize="15" FontWeight="Bold">User Images</TextBlock>
                     <StackPanel Margin="30 0" Orientation="Horizontal" HorizontalAlignment="Center" RenderTransformOrigin="0.5,0.5">
                         <RadioButton GroupName="imageGroup" Name="imageDefault" IsChecked="True">
-                            <Border BorderThickness="1" BorderBrush="Black">
-                                <Image Source="/Resources/userIcon.png" Width="20" VerticalAlignment="Center"></Image>
-                            </Border>
+                            <Ellipse Width="30" Height="30" StrokeThickness="1" Stroke="Black">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Resources/userIcon.png"></ImageBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
                         </RadioButton>
                         <RadioButton GroupName="imageGroup" Name="image1">
-                            <Image Source="/Resources/userIcon1.png" Width="20" VerticalAlignment="Center"></Image>
+                            <Ellipse Width="30" Height="30" StrokeThickness="1" Stroke="Black">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Resources/userIcon1.png"></ImageBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
                         </RadioButton>
                         <RadioButton GroupName="imageGroup" Name="image2">
-                            <Image Source="/Resources/userIcon2.png" Width="20" VerticalAlignment="Center"></Image>
+                            <Ellipse Width="30" Height="30" StrokeThickness="1" Stroke="Black">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Resources/userIcon2.png"></ImageBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
                         </RadioButton>
                         <RadioButton GroupName="imageGroup" Name="image3">
-                            <Image Source="/Resources/userIcon3.png" Width="20" VerticalAlignment="Center"></Image>
+                            <Ellipse Width="30" Height="30" StrokeThickness="1" Stroke="Black">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Resources/userIcon3.png"></ImageBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
                         </RadioButton>
                         <RadioButton GroupName="imageGroup" Name="image4">
-                            <Image Source="/Resources/userIcon4.png" Width="20" VerticalAlignment="Center"></Image>
+                            <Ellipse Width="30" Height="30" StrokeThickness="1" Stroke="Black">
+                                <Ellipse.Fill>
+                                    <ImageBrush ImageSource="/Resources/userIcon4.png"></ImageBrush>
+                                </Ellipse.Fill>
+                            </Ellipse>
                         </RadioButton>
                     </StackPanel>
                 </StackPanel>

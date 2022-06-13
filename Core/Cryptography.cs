@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -77,6 +78,37 @@ namespace Core
             rsa.ImportCspBlob(getPrivateKey());
             byte[] dados = Convert.FromBase64String(dadosBase64);
             return rsa.Decrypt(dados, true);
+        }
+
+        public static byte[] converterDadosNumaAssinatura(object objeto)
+        {
+            byte[] assinatura;
+
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();// Inicializa a encriptação
+            rsa.ImportCspBlob(getPrivateKey());// Importa o Blob - Representação da chave Privada
+
+            string json = JsonConvert.SerializeObject(objeto);// Converte um objeto em json 
+
+            using (SHA256 sha256 = SHA256.Create())// Criar uma instancia da hash 
+            {
+                byte[] dados = Encoding.UTF8.GetBytes(json);// Converte o json em bytes
+                assinatura = rsa.SignData(dados, sha256);// Assinar os dados
+            }
+            return assinatura;// Retorna a assinatura
+        }
+
+        public static bool validarAssinatura(byte[] CspBlob, object objeto, byte[] assinatura)
+        {
+            bool verify;
+            RSACryptoServiceProvider rsa = new RSACryptoServiceProvider();// Inicializa a encriptação
+            rsa.ImportCspBlob(CspBlob);// Importa o Blob - Representação da chave Privada
+
+            using (SHA256 sha256 = SHA256.Create())// Criar uma instancia da hash
+            {
+                byte[] dados = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(objeto));// Converte o json em bytes
+                verify = rsa.VerifyData(dados, sha256, assinatura);// Verifica a vericidade dos dados
+            }
+            return verify;// Retorna o estado
         }
 
         /**
