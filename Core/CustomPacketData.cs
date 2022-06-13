@@ -18,6 +18,49 @@ namespace Core
         REGISTER_RESPONSE
     }
 
+    public static class Core
+    {
+        public static Type GetTypeFromPacketType(PacketType type)
+        {
+            switch(type)
+            {
+                case PacketType.USER_JOINED:
+                    return typeof(UserJoined_Packet);
+
+                case PacketType.USER_LEFT:
+                    return typeof(uint);
+
+                case PacketType.MESSAGE:
+                    return typeof(Message_Packet);
+
+                case PacketType.USER_LIST_REQUEST:
+                    return null;
+
+                case PacketType.USER_LIST_RESPONSE:
+                    return typeof(List<UserListItem_Packet>);
+
+                case PacketType.MESSAGE_HISTORY_REQUEST:
+                    return typeof(uint);
+
+                case PacketType.MESSAGE_HISTORY_RESPONSE:
+                    return typeof(UserMessageHistory_Packet);
+
+                case PacketType.AUTH_REQUEST:
+                    return typeof(Auth_Request_Packet);
+
+                case PacketType.AUTH_RESPONSE:
+                    return typeof(Auth_Response_Packet);
+
+                case PacketType.REGISTER_REQUEST:
+                    return typeof(Register_Request_Packet);
+
+                case PacketType.REGISTER_RESPONSE:
+                    return typeof(Register_Response_Packet);
+            }
+            return null;
+        }
+    }
+
     /// <summary>
     /// Pacote base que encapsula o tipo de informação a ser pedida/enviada e os dados relativos a essa informação
     /// </summary>
@@ -32,6 +75,7 @@ namespace Core
         /// <para>Quando se está a dar serialize, é visto corretamente como um objeto. Quando se está a dar deserialize do pacote todo, é tomado como String e precisa de ser deserialized individualmente</para>
         /// </summary>
         public object Contents { get; set; }
+        public byte[] Signature { get; set; }
     }
 
     /// <summary>

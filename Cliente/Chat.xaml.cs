@@ -25,39 +25,57 @@ namespace Cliente
             textBlock_nomeUtilizador.Text = Session.username;
 
             // Pedir dados de utilizadores
-            Basic_Packet reequestOnlineUsers = new Basic_Packet();
-            reequestOnlineUsers.Type = PacketType.USER_LIST_REQUEST;
-            reequestOnlineUsers.Contents = null;
-            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(reequestOnlineUsers)));
+            Basic_Packet requestOnlineUsers = new Basic_Packet();
+            requestOnlineUsers.Type = PacketType.USER_LIST_REQUEST;
+            requestOnlineUsers.Contents = null;
+            requestOnlineUsers.Signature = Cryptography.converterDadosNumaAssinatura(null);
+
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(requestOnlineUsers)));
             Session.networkStream.Write(dados, 0, dados.Length);
 
-            // Esperar e ler os dados enviados pelo servidor. Caso existam utilizadores online são mostrados na textBlock_listaUtilizadores
-            // Ler resposta do tipo USER_LIST_REQUEST
             Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-            while (protocolSI.GetCmdType() != ProtocolSICmdType.SYM_CIPHER_DATA) // Enquanto não receber SYM_CIPHER_DATA (para ignorar ACKs e outros pacotes perdidos)
+
+            if(protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
             {
-                Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
-            }
+                // Esperar e ler os dados enviados pelo servidor. Caso existam utilizadores online são mostrados na textBlock_listaUtilizadores
+                // Ler resposta do tipo USER_LIST_REQUEST
+                while (protocolSI.GetCmdType() != ProtocolSICmdType.SYM_CIPHER_DATA) // Enquanto não receber SYM_CIPHER_DATA (para ignorar ACKs e outros pacotes perdidos)
+                {
+                    Session.networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length); // Ler o próximo pacote
+                }
 
-            Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
-            List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
-            foreach (var user in packets)
+                Basic_Packet pacote = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
+                
+                if(Cryptography.validarAssinatura(Session.serverPublickKey, JsonConvert.DeserializeObject(pacote.Contents.ToString(), Core.Core.GetTypeFromPacketType(pacote.Type)), pacote.Signature))
+                {
+                    List<UserListItem_Packet> packets = JsonConvert.DeserializeObject<List<UserListItem_Packet>>(pacote.Contents.ToString());
+                    foreach (var user in packets)
+                    {
+                        UserManagement.AddUser(user.userID, user.username, user.userImage);
+                    }
+                    desenharListaUtilizadores();
+
+                    // Aplicar imagem do utilizador atual
+                    userImage.ImageSource = Utilities.getImage(Session.userImage);
+
+                    // Adição de notificação de entrada
+                    ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat");
+                    messagePanel.Children.Add(joinNotification);
+
+                    // Iniciar thread para tratar dos dados a receber
+                    threadMensagens = new Thread(CarregarMensagens);
+                    threadMensagens.SetApartmentState(ApartmentState.STA); // STA porque vamos pedir para mexer em elementos do UI
+                    threadMensagens.Start();
+                }
+                else
+                {
+                    MessageBox.Show("Assinatura Inválida", "Erro de assinaturas", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
             {
-                UserManagement.AddUser(user.userID, user.username, user.userImage);
+                MessageBox.Show("O servidor rejeitou o pacote", "Erro de assinaturas", MessageBoxButton.OK, MessageBoxImage.Error);
             }
-            desenharListaUtilizadores();
-
-            // Aplicar imagem do utilizador atual
-            userImage.ImageSource = Utilities.getImage(Session.userImage);
-
-            // Adição de notificação de entrada
-            ServerNotificationControl joinNotification = new ServerNotificationControl("Ligado ao chat");
-            messagePanel.Children.Add(joinNotification);
-
-            // Iniciar thread para tratar dos dados a receber
-            threadMensagens = new Thread(CarregarMensagens);
-            threadMensagens.SetApartmentState(ApartmentState.STA); // STA porque vamos pedir para mexer em elementos do UI
-            threadMensagens.Start();
         }
 
         private void adicionarMensagemCliente(string mensagem)
@@ -72,8 +90,9 @@ namespace Cliente
             message.time = DateTime.Now;
             message.userID = (uint)Session.userID;
             pacote.Contents = message;
-            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
+            pacote.Signature = Cryptography.converterDadosNumaAssinatura(pacote.Contents);
 
+            byte[] dados = protocolSI.Make(ProtocolSICmdType.SYM_CIPHER_DATA, Cryptography.AESEncrypt(Session.aes, JsonConvert.SerializeObject(pacote)));
             Session.networkStream.Write(dados, 0, dados.Length);
 
             ClientMessageControl clientMessageControl = new ClientMessageControl(Session.username, DateTime.Now, mensagem);
@@ -114,77 +133,86 @@ namespace Cliente
                         {
                             //obter os dados para a estrutura
                             Basic_Packet dados = JsonConvert.DeserializeObject<Basic_Packet>(Cryptography.AESDecrypt(Session.aes, protocolSI.GetStringFromData()));
-                            // Enviar o ack
-                            byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
-                            Session.networkStream.Write(ack, 0, ack.Length);
-                            //Verificar qual o tipo de pedido
-                            switch (dados.Type)
+
+                            if (dados.Contents != null)
                             {
-                                #region MESSAGE
-                                case PacketType.MESSAGE:
-                                    if (dados.Contents != null)
-                                    {
-                                        messagePanel.Dispatcher.Invoke(() =>
-                                        {
-                                            Message_Packet msg = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
-                                            UserInfo sender = UserManagement.GetUser(msg.userID);
-                                            MessageControl message = new MessageControl(sender.userID, sender.username, sender.userImage, msg.time, msg.message);
-                                            messagePanel.Children.Add(message);
-                                        });
-                                    }
-                                    break;
-                                #endregion
+                                if (!Cryptography.validarAssinatura(Session.serverPublickKey, JsonConvert.DeserializeObject(dados.Contents.ToString(), Core.Core.GetTypeFromPacketType(dados.Type)), dados.Signature))
+                                {
+                                    MessageBox.Show("Assinatura de pacote inválida.", "Assinatura inválida", MessageBoxButton.OK, MessageBoxImage.Error);
+                                }
+                                else
+                                {
+                                    // Enviar o ack
+                                    byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                                    Session.networkStream.Write(ack, 0, ack.Length);
 
-                                //Saber qual o user que entrou no chat
-                                #region USER_JOINED
-                                case PacketType.USER_JOINED:
-                                    //Adicionar á lista os utilizadores que estão online
-                                    //Verificar se existem dados
-                                    if (dados.Contents != null)
+                                    //Verificar qual o tipo de pedido
+                                    switch (dados.Type)
                                     {
-                                        UserJoined_Packet request_user_joined = JsonConvert.DeserializeObject<UserJoined_Packet>(dados.Contents.ToString());
-                                        textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
-                                        {
-                                            UserManagement.AddUser(request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
-                                            ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!");
-                                            messagePanel.Children.Add(joinNotification);
-                                            desenharListaUtilizadores();
-                                        });
-                                    }
-                                    break;
-                                #endregion
-
-                                //Saber qual o user saiu do chat
-                                //Verificar se existem dados
-                                #region USER_LEFT
-                                case PacketType.USER_LEFT:
-                                    //Remover da lista os utilizadores que sairem
-                                    if (dados.Contents != null)
-                                    {
-                                        textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
-                                        {
-                                            try
+                                        #region MESSAGE
+                                        case PacketType.MESSAGE:
+                                            messagePanel.Dispatcher.Invoke(() =>
                                             {
-                                                uint context_user = uint.Parse(dados.Contents.ToString()); // Por algum motivo ele não aceita fazer o cast direto de object para uint
+                                                Message_Packet msg = JsonConvert.DeserializeObject<Message_Packet>(dados.Contents.ToString());
+                                                UserInfo sender = UserManagement.GetUser(msg.userID);
+                                                MessageControl message = new MessageControl(sender.userID, sender.username, sender.userImage, msg.time, msg.message);
+                                                messagePanel.Children.Add(message);
+                                            });
+                                            break;
+                                        #endregion
 
-                                                ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername(context_user) + " saiu do chat!");
+                                        //Saber qual o user que entrou no chat
+                                        #region USER_JOINED
+                                        case PacketType.USER_JOINED:
+                                            //Adicionar á lista os utilizadores que estão online
+                                            UserJoined_Packet request_user_joined = JsonConvert.DeserializeObject<UserJoined_Packet>(dados.Contents.ToString());
+                                            textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
+                                            {
+                                                UserManagement.AddUser(request_user_joined.userID, request_user_joined.username, request_user_joined.userImage);
+                                                ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + request_user_joined.username + " juntou-se ao chat!");
                                                 messagePanel.Children.Add(joinNotification);
-                                                UserManagement.RemoveUser(context_user);
                                                 desenharListaUtilizadores();
-                                            }
-                                            catch (Exception ex)
+                                            });
+                                            break;
+                                        #endregion
+
+                                        //Saber qual o user saiu do chat
+                                        //Verificar se existem dados
+                                        #region USER_LEFT
+                                        case PacketType.USER_LEFT:
+                                            //Remover da lista os utilizadores que sairem
+                                            textBlock_listaUtilizadores.Dispatcher.Invoke(() =>
                                             {
-                                                MessageBox.Show(ex.Message + "\n" + dados.Contents.ToString());
-                                            }
-                                        });
+                                                try
+                                                {
+                                                    uint context_user = uint.Parse(dados.Contents.ToString()); // Por algum motivo ele não aceita fazer o cast direto de object para uint
+
+                                                    ServerNotificationControl joinNotification = new ServerNotificationControl("O utilizador " + UserManagement.GetUsername(context_user) + " saiu do chat!");
+                                                    messagePanel.Children.Add(joinNotification);
+                                                    UserManagement.RemoveUser(context_user);
+                                                    desenharListaUtilizadores();
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    MessageBox.Show(ex.Message + "\n" + dados.Contents.ToString());
+                                                }
+                                            });
+                                            break;
+                                            #endregion
                                     }
-                                    break;
-                                    #endregion
+                                }
                             }
                         }
                         else
                         {
                             break; // Quando aqui chegar a execução já devia estar mais que parada. Isto é só uma ajuda.
+                        }
+                    }
+                    else
+                    {
+                        if(protocolSI.GetCmdType() == ProtocolSICmdType.NACK)
+                        {
+                            MessageBox.Show("O servidor rejeitou um pacote enviado", "NACK", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
                 }
@@ -193,11 +221,9 @@ namespace Cliente
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Erro thread", MessageBoxButton.OK, MessageBoxImage.Error);
-                /**
-                 * Coisas a fazer aqui:
-                 *  - Tentar enviar EOT para terminar aplicação; ou
-                 *  - Simplesmente forçar saída
-                 */
+
+                // Thread crashou. Sair forçadamente
+                Application.Current.Shutdown();
             }
         }
 

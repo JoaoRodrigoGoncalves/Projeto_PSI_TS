@@ -18,6 +18,7 @@ namespace Cliente
         internal static uint? userImage = null;
         internal static Login loginReference = null; // Utilizado para poder terminar sessão e poder regressar à janela de login inicial
         internal static AesCryptoServiceProvider aes = null;
+        internal static byte[] serverPublickKey = null;
 
         internal static void StartTCPSession()
         {
@@ -37,23 +38,20 @@ namespace Cliente
                     byte[] sendPubKey = protocolSI.Make(ProtocolSICmdType.PUBLIC_KEY, Convert.ToBase64String(Cryptography.getPublicKey()));
                     networkStream.Write(sendPubKey, 0, sendPubKey.Length);
 
+                    // Receber server public key
                     networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                    serverPublickKey = Convert.FromBase64String(protocolSI.GetStringFromData());
 
-                    if (protocolSI.GetCmdType() == ProtocolSICmdType.ACK)
-                    {
-                        // Receber secret_key
-                        networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
-                        aes = new AesCryptoServiceProvider();
-                        string password = Encoding.UTF8.GetString(Cryptography.privateKeyDecrypt(protocolSI.GetStringFromData()));
-                        aes.IV = Cryptography.CreateIV(password);
-                        aes.Key = Cryptography.CreatePrivateKey(password);
-                    }
-                    else
-                    {
-                        CloseTCPSession();
-                        MessageBox.Show("Ocorreu um erro ao trocar as chaves com o servidor.", "Erro", MessageBoxButton.OK, MessageBoxImage.Error);
-                        Application.Current.Shutdown();
-                    }
+                    // Enviar ACK
+                    byte[] ack = protocolSI.Make(ProtocolSICmdType.ACK);
+                    networkStream.Write(ack, 0, ack.Length);
+
+                    // Receber secret key
+                    networkStream.Read(protocolSI.Buffer, 0, protocolSI.Buffer.Length);
+                    string password = Encoding.UTF8.GetString(Cryptography.privateKeyDecrypt(protocolSI.GetStringFromData()));
+                    aes = new AesCryptoServiceProvider();
+                    aes.IV = Cryptography.CreateIV(password);
+                    aes.Key = Cryptography.CreatePrivateKey(password);
                 }
                 else
                 {

@@ -16,7 +16,7 @@ namespace Cliente
         {
             InitializeComponent();
             this.textBlock_nomeUtilizador.Text = name;
-            this.image_ImagemUtilizador.Source = Utilities.getImage(userImage);
+            this.image_ImagemUtilizador.ImageSource = Utilities.getImage(userImage);
             this.textBlock_timestamp.Text = messageDateTime.ToString("G");
             this.textBlock_mensagem.Text = message;
             this.userID = userID;

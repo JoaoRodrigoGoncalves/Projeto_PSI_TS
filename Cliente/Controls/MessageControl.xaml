@@ -18,11 +18,19 @@
                 MouseEnter="textBlock_nomeUtilizador_MouseEnter"
                 MouseLeave="textBlock_nomeUtilizador_MouseLeave"/>
         <StackPanel Orientation="Horizontal">
-            <Image
-                x:Name="image_ImagemUtilizador"
-                Source="/Resources/userIcon.png"
+            <Ellipse
+                Width="30"
+                Height="30"
+                StrokeThickness="1"
+                Stroke="Black"
                 Margin="5 0 0 0"
-                Height="30"/>
+                VerticalAlignment="Top">
+                <Ellipse.Fill>
+                    <ImageBrush
+                        x:Name="image_ImagemUtilizador"
+                        ImageSource="/Resources/userIcon.png" />
+                </Ellipse.Fill>
+            </Ellipse>
             <Border
                 x:Name="BallonBorder"
                 CornerRadius="10"

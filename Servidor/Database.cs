@@ -160,7 +160,7 @@ namespace Servidor
             {
                 List<UserMessageHistoryItem_Packet> mensagem = new List<UserMessageHistoryItem_Packet>();
 
-                foreach (Mensagens msg in chatAppEntities.Mensagens.Where(m => m.IDUtilizador == userID).Take(3))
+                foreach (Mensagens msg in chatAppEntities.Mensagens.Where(m => m.IDUtilizador == userID).OrderByDescending(m => m.dtaEnvio).Take(3))
                 {
                     UserMessageHistoryItem_Packet m = new UserMessageHistoryItem_Packet();
                     m.message = msg.Texto;
